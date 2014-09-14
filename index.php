@@ -13,7 +13,7 @@ $app->response()->header('Content-Type', 'application/json;charset=utf-8');
 // 
 // POST
 // http://roomnants.com/onrange/api/local/adicionalocal {"nome_local":"Clube do Chalezinho","latitude_local":"-19.968165","longitude_local":"-43.957688","id_usuario":"1","tipo_local":"1"}
-// http://roomnants.com/onrange/api/usuario/adicionausuario {"nome_usuario":"Jo„o","sexo_usuario":"M","facebook_usuario":"11111111111","email_usuario":"joao@joao.com"}
+// http://roomnants.com/onrange/api/usuario/adicionausuario {"nome_usuario":"JoÔøΩo","sexo_usuario":"M","facebook_usuario":"11111111111","email_usuario":"joao@joao.com"}
 // http://roomnants.com/onrange/api/checkin/adicionacheckin {"id_usuario":"1","id_local":"1"}
 // http://roomnants.com/onrange/api/like/adicionalike {"id_usuario1":"1","id_usuario2":"2","id_local":"1"}
 // http://roomnants.com/onrange/api/usuario/login {"facebook_usuario":"100000627704444"}
@@ -22,25 +22,26 @@ $app->response()->header('Content-Type', 'application/json;charset=utf-8');
 // http://roomnants.com/onrange/api/checkin/fazcheckout
 // http://roomnants.com/onrange/api/checkin/unMatch
 
+// Teste GIT
 
 //GET METHODS
-$app->get('/', function () { echo "{\"Erro\":\"diretÛrio raiz\"}"; }); //erro no raiz
+$app->get('/', function () { echo "{\"Erro\":\"diretÔøΩrio raiz\"}"; }); //erro no raiz
 $app->get('/local/listatodoslocais','listaTodosLocais'); //traz todos locais
-$app->get('/local/listaLocaisRange/:latitude_atual/:longitude_atual/:range/:order_by','listaLocaisRange'); //traz os locais dentro do range definido pelo usu·rio, baseando-se no local atual
-$app->get('/checkin/listaUsuariosCheckin/:id_local/:sexo/:id_usuario','listaUsuariosCheckin'); //traz os usu·rios com checkin corrente no local informado
-$app->get('/checkin/verificaCheckinUsuario/:id_usuario','verificaCheckinUsuario'); //traz os usu·rios com checkin corrente no local informado
-$app->get('/match/listaMatches/:id_usuario','listaMatches'); //traz uma lista com todos os matches v·lidos do usu·rio informado
+$app->get('/local/listaLocaisRange/:latitude_atual/:longitude_atual/:range/:order_by','listaLocaisRange'); //traz os locais dentro do range definido pelo usuÔøΩrio, baseando-se no local atual
+$app->get('/checkin/listaUsuariosCheckin/:id_local/:sexo/:id_usuario','listaUsuariosCheckin'); //traz os usuÔøΩrios com checkin corrente no local informado
+$app->get('/checkin/verificaCheckinUsuario/:id_usuario','verificaCheckinUsuario'); //traz os usuÔøΩrios com checkin corrente no local informado
+$app->get('/match/listaMatches/:id_usuario','listaMatches'); //traz uma lista com todos os matches vÔøΩlidos do usuÔøΩrio informado
 
 //POST METHODS
 $app->post('/local/adicionalocal','adicionaLocal'); //cria novo local
 $app->post('/usuario/adicionausuario','adicionaUsuario'); //cria novo usuario
 $app->post('/checkin/adicionacheckin','adicionaCheckin'); //faz checkin
-$app->post('/like/adicionalike','adicionaLike'); //d· like em alguÈm, em algum local
-$app->post('/usuario/login','loginUsuario'); //faz login de usuário
+$app->post('/like/adicionalike','adicionaLike'); //dÔøΩ like em alguÔøΩm, em algum local
+$app->post('/usuario/login','loginUsuario'); //faz login de usuÔøΩrio
 
 //PUT METHODS
-$app->put('/checkin/fazcheckout','fazCheckout'); //cancela o checkin vigente do usu·rio
-$app->put('/match/unmatch','unMatch'); //cancela o Match com o usu·rio informado
+$app->put('/checkin/fazcheckout','fazCheckout'); //cancela o checkin vigente do usuÔøΩrio
+$app->put('/match/unmatch','unMatch'); //cancela o Match com o usuÔøΩrio informado
 
 //INTERFACES com QUICKBLOX
 $app->post('/quickblox/todosusuarios','listaTodosUsuariosQuickblox'); //cria novo usuario
@@ -81,7 +82,7 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 	$maxLong = $longitude_atual + rad2deg($range/6371/cos(deg2rad($latitude_atual)));
 	$minLong = $longitude_atual - rad2deg($range/6371/cos(deg2rad($latitude_atual)));
 	
-	//Verifica qual seleÁ„o deve ser aplicada, se por checkins ou por dist‚ncia
+	//Verifica qual seleÔøΩÔøΩo deve ser aplicada, se por checkins ou por distÔøΩncia
 	if($order_by=="checkin"){
 		$sql = "SELECT id_local, nome, latitude, longitude, 
 					acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
@@ -178,7 +179,7 @@ function adicionaLocal()
 	
 	//Checkout no local anterior
 	
-	//Verifica se h· checkin corrente
+	//Verifica se hÔøΩ checkin corrente
 			
 	$sql = "SELECT id_checkin, id_local FROM CHECKIN WHERE id_usuario = :id_usuario AND dt_checkout IS NULL";
 		
@@ -196,7 +197,7 @@ function adicionaLocal()
 	
 	$checkin = $stmt->fetch(PDO::FETCH_OBJ);
 	
-	if($checkin){ //Se existe checkin prÈvio, faz o checkout
+	if($checkin){ //Se existe checkin prÔøΩvio, faz o checkout
 	
 		$sql = "UPDATE CHECKIN SET dt_checkout = NOW() WHERE id_checkin = :id_checkin";
 		
@@ -276,7 +277,7 @@ function adicionaUsuario()
 		
 	$usuario->aniversario_usuario = str_replace("/", "-", $usuario->aniversario_usuario);
 	
-	//Verifica se o usu·rio j· est· cadastrado
+	//Verifica se o usuÔøΩrio jÔøΩ estÔøΩ cadastrado
 	
 	$sql = "SELECT id_usuario, nome, sexo, email, localizacao, aniversario FROM USUARIO WHERE id_facebook = :id_facebook";
 	try{
@@ -294,7 +295,7 @@ function adicionaUsuario()
 	
 	$usuario->id_usuario = $registro_usuario->id_usuario;
 	
-	if(!$registro_usuario){		//--------------####### NOVO USU¡RIO #######--------------//
+	if(!$registro_usuario){		//--------------####### NOVO USUÔøΩRIO #######--------------//
 	//Insere na base e informa novo_usuario = 1
 	
 		$sql = "INSERT INTO USUARIO (nome, sexo, id_facebook, email, dt_usuario, localizacao, aniversario) VALUES (:nome_usuario, :sexo_usuario, :facebook_usuario, :email_usuario, NOW(), :localizacao_usuario, :aniversario_usuario)";
@@ -313,7 +314,7 @@ function adicionaUsuario()
 			die();
 		}
 		
-		// Cria usu·rio no QuickBlox
+		// Cria usuÔøΩrio no QuickBlox
 		
 		$tags = "sexo-" . $usuario->sexo_usuario . ",localizacao-" . $usuario->localizacao_usuario . ",aniversario-" . $usuario->aniversario_usuario;
 		
@@ -323,7 +324,7 @@ function adicionaUsuario()
 			$usuario->QB = CallAPIQB("POST","http://api.quickblox.com/users.json",$dados_usuario,"QB-Token: " . $usuario->qbtoken);
 		} catch(PDOException $e){
 		
-			echo '{"Erro":{"id_output":"2","desc_output":"Erro ao criar usu·rio QB. Tente novamente mais tarde."}}';
+			echo '{"Erro":{"id_output":"2","desc_output":"Erro ao criar usuÔøΩrio QB. Tente novamente mais tarde."}}';
 			die();
 		}
 		
@@ -334,12 +335,12 @@ function adicionaUsuario()
 		$usuario->desc_output = "Usuario criado com sucesso. Login realizado com sucesso.";
 		
 	}
-	else{	   //--------------####### USU¡RIO EXISTENTE #######--------------//
+	else{	   //--------------####### USUÔøΩRIO EXISTENTE #######--------------//
 	
-		//Verifica se houve alteraÁ„o das informaÁıes pessoais
+		//Verifica se houve alteraÔøΩÔøΩo das informaÔøΩÔøΩes pessoais
 		
 		if($registro_usuario->nome != $usuario->nome_usuario || $registro_usuario->sexo != $usuario->sexo_usuario || $registro_usuario->email != $usuario->email_usuario || $registro_usuario->localizacao != $usuario->localizacao_usuario || $registro_usuario->aniversario != $usuario->aniversario_usuario){
-			//Se houve alteraÁ„o em algum dos dados, atualiza o registro do usu·rio na base do Onrange
+			//Se houve alteraÔøΩÔøΩo em algum dos dados, atualiza o registro do usuÔøΩrio na base do Onrange
 			
 			$sql = "UPDATE USUARIO SET nome = :nome_usuario, sexo = :sexo_usuario, email = :email_usuario, localizacao = :localizacao_usuario, aniversario = :aniversario_usuario WHERE id_usuario = :id_usuario";
 			try{
@@ -352,11 +353,11 @@ function adicionaUsuario()
 				$stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
 				$stmt->execute();
 			} catch(PDOException $e){
-				echo '{"Erro":{"id_output":"2","desc_output":"Erro ao atualizar dados do usu·rio. Tente novamente mais tarde."}}';
+				echo '{"Erro":{"id_output":"2","desc_output":"Erro ao atualizar dados do usuÔøΩrio. Tente novamente mais tarde."}}';
 				die();
 			}
 		
-			// Atualiza usu·rio no QuickBlox
+			// Atualiza usuÔøΩrio no QuickBlox
 		
 			$tags = "sexo-" . $usuario->sexo_usuario . ",localizacao-" . $usuario->localizacao_usuario . ",aniversario-" . $usuario->aniversario_usuario;
 			
@@ -366,7 +367,7 @@ function adicionaUsuario()
 				$usuario->QB = CallAPIQB("PUT","http://api.quickblox.com/users/1328.json",$dados_usuario,"QB-Token: " . $usuario->qbtoken);
 			} catch(PDOException $e){
 			
-				echo '{"Erro":{"id_output":"2","desc_output":"Erro ao atualizar usu·rio QB. Tente novamente mais tarde."}}';
+				echo '{"Erro":{"id_output":"2","desc_output":"Erro ao atualizar usuÔøΩrio QB. Tente novamente mais tarde."}}';
 				die();
 			}
 
@@ -389,7 +390,7 @@ function adicionaCheckin()
 	$request = \Slim\Slim::getInstance()->request();
 	$checkin = json_decode($request->getBody());
 
-	//Verifica se o usu·rio j· tem algum checkin corrente
+	//Verifica se o usuÔøΩrio jÔøΩ tem algum checkin corrente
 	$sql = "SELECT id_checkin, id_local, TIME_TO_SEC(TIMEDIFF(NOW(),dt_checkin))/60 as minutos_ultimo_checkin FROM CHECKIN WHERE id_usuario = :id_usuario AND dt_checkout IS NULL";
 	try{
 		$conn = getConn();
@@ -404,7 +405,7 @@ function adicionaCheckin()
 	
 	$checkin_vigente = $stmt->fetch(PDO::FETCH_OBJ);
 	
-	if($checkin_vigente){		//Se h· checkin vigente para o usu·rio
+	if($checkin_vigente){		//Se hÔøΩ checkin vigente para o usuÔøΩrio
 	
 		//retorna checkin_vigente = 1, o id e o local do checkin vigente
 			
@@ -412,7 +413,7 @@ function adicionaCheckin()
 		$checkin->id_checkin_anterior = $checkin_vigente->id_checkin;
 		$checkin->id_local_anterior = $checkin_vigente->id_local;
 	
-		// Verifica se o ˙ltimo checkin foi realizado h· menos de 5 minutos.
+		// Verifica se o ÔøΩltimo checkin foi realizado hÔøΩ menos de 5 minutos.
 		
 		if($checkin_vigente->minutos_ultimo_checkin > 0){		
 		
@@ -440,7 +441,7 @@ function adicionaCheckin()
 				die();
 			}
 		}
-		// Se o ultimo checkin foi realizado h· menos de 5 minutos, retorna mensagem de erro.
+		// Se o ultimo checkin foi realizado hÔøΩ menos de 5 minutos, retorna mensagem de erro.
 		else{
 			$checkin->id_output = "3";
 			$checkin->desc_output = "Checkin anterior em menos de 5 minutos.";
@@ -496,7 +497,7 @@ function adicionaLike()
 	$request = \Slim\Slim::getInstance()->request();
 	$like = json_decode($request->getBody());
 	
-	//Verifica se o usu·rio destino do like ainda tem um checkin v·lido
+	//Verifica se o usuÔøΩrio destino do like ainda tem um checkin vÔøΩlido
 	
 	$sql = "SELECT 1 FROM CHECKIN WHERE id_usuario = :id_usuario2 AND id_local = :id_local AND DT_CHECKOUT IS NULL";
 	try{
@@ -512,12 +513,12 @@ function adicionaLike()
 		die();
 	}
 	
-	//Se o usu·rio de destino fez o checkout
+	//Se o usuÔøΩrio de destino fez o checkout
 	if(!$stmt->fetchObject()) 
-		echo '{"Erro":{"id_output":"3","desc_output":"Erro ao curtir. O usu·rio de destino fez o checkout no local."}}';
-	else{ //Se o checkin do usu·rio destino ainda È v·lido
+		echo '{"Erro":{"id_output":"3","desc_output":"Erro ao curtir. O usuÔøΩrio de destino fez o checkout no local."}}';
+	else{ //Se o checkin do usuÔøΩrio destino ainda ÔøΩ vÔøΩlido
 
-		//Verifica se o usu·rio j· foi curtido ou n„o
+		//Verifica se o usuÔøΩrio jÔøΩ foi curtido ou nÔøΩo
 		
 		$sql = "SELECT 1 FROM LIKES WHERE id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2 AND dt_expiracao IS NULL";
 		try{
@@ -532,10 +533,10 @@ function adicionaLike()
 			die();
 		}
 		
-		//Se j· n„o existe like v·lido
+		//Se jÔøΩ nÔøΩo existe like vÔøΩlido
 		if(!$stmt->fetchObject()){
 
-			//D· o like
+			//DÔøΩ o like
 		
 			$sql = "INSERT INTO LIKES (id_usuario1, id_usuario2, id_local, dt_like) VALUES (:id_usuario1, :id_usuario2, :id_local, NOW())";
 			try{
@@ -554,7 +555,7 @@ function adicionaLike()
 				
 			//Verifica se houve o match
 			
-			//Verifica se o outro usu·rio j· deu o like tambÈm, e se o mesmo ainda È v·lido
+			//Verifica se o outro usuÔøΩrio jÔøΩ deu o like tambÔøΩm, e se o mesmo ainda ÔøΩ vÔøΩlido
 			try{
 				$sql = "SELECT 1 FROM LIKES WHERE id_usuario1 = :id_usuario2 AND id_usuario2 = :id_usuario1 AND DT_EXPIRACAO IS NULL"; 
 				$stmt = $conn->prepare($sql);
@@ -564,16 +565,16 @@ function adicionaLike()
 
 			} catch(PDOException $e){
 				
-				echo '{"Erro":{"id_output":"2","desc_output":"Erro ao buscar likes de usu·rios. Tente novamente mais tarde."}}';
+				echo '{"Erro":{"id_output":"2","desc_output":"Erro ao buscar likes de usuÔøΩrios. Tente novamente mais tarde."}}';
 				die();
 			}
-			//Retorna match = 0 se n„o houver retorno do select
+			//Retorna match = 0 se nÔøΩo houver retorno do select
 				
 			if(!$stmt->fetchObject())
 				$like->match = "0";
 			else{	//--------------------------######## MATCH ########--------------------------//
 			
-				// Busca os IDs do QB dos usu·rios
+				// Busca os IDs do QB dos usuÔøΩrios
 				
 				try{
 				$sql = "SELECT id_qb FROM USUARIO WHERE id_usuario = :id_usuario1";
@@ -584,7 +585,7 @@ function adicionaLike()
 
 				} catch(PDOException $e){
 					
-					echo '{"Erro":{"id_output":"2","desc_output":"Erro ao buscar usu·rios para chat. Tente novamente mais tarde."}}';
+					echo '{"Erro":{"id_output":"2","desc_output":"Erro ao buscar usuÔøΩrios para chat. Tente novamente mais tarde."}}';
 					die();
 				}
 				
@@ -597,13 +598,13 @@ function adicionaLike()
 
 				} catch(PDOException $e){
 					
-					echo '{"Erro":{"id_output":"2","desc_output":"Erro ao buscar usu·rios para chat. Tente novamente mais tarde."}}';
+					echo '{"Erro":{"id_output":"2","desc_output":"Erro ao buscar usuÔøΩrios para chat. Tente novamente mais tarde."}}';
 					die();
 				}
 			
 				//######## CHAT ########//
 				
-				// Por algum motivo obscuro o QB se perde caso mandemos uma requisiÁ„o de um chat j· existente, mas com os IDs na ordem inversa. Desta forma, mandamos sempre na mesma ordem.
+				// Por algum motivo obscuro o QB se perde caso mandemos uma requisiÔøΩÔøΩo de um chat jÔøΩ existente, mas com os IDs na ordem inversa. Desta forma, mandamos sempre na mesma ordem.
 				
 				if($usuario1->id_qb > $usuario2->id_qb)
 					$dados_chat = array( "type" => 3, "name" => "", "occupants_ids" => $usuario1->id_qb . "," . $usuario2->id_qb);
@@ -642,7 +643,7 @@ function adicionaLike()
 
 			echo "{\"Like\":" . json_encode($like) . "}";
 		
-		//Se j· h· o like v·lido, d· deslike
+		//Se jÔøΩ hÔøΩ o like vÔøΩlido, dÔøΩ deslike
 		}else{
 		
 			$sql = "UPDATE LIKES SET dt_expiracao = NOW() WHERE id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2 AND dt_expiracao IS NULL";
@@ -785,7 +786,7 @@ function fazCheckout()
 	
 	$existe_checkin = $stmt->fetch(PDO::FETCH_OBJ);
 	
-	//Verifica se existe checkin corrente para o usu·rio. Se sim, faz o checkout.
+	//Verifica se existe checkin corrente para o usuÔøΩrio. Se sim, faz o checkout.
 	
 	if($existe_checkin){
 	
@@ -818,7 +819,7 @@ function fazCheckout()
 			die();
 		}
 		
-		//Expira todos os likes dados pelo usu·rio
+		//Expira todos os likes dados pelo usuÔøΩrio
 				
 		$sql = "UPDATE LIKES SET dt_expiracao = NOW() WHERE id_usuario1 = :id_usuario AND dt_expiracao IS NULL";
 		
@@ -837,7 +838,7 @@ function fazCheckout()
 		echo "{\"Checkout\":{\"id_output\":\"1\",\"desc_output\":\"Checkout realizado.\"}}";		
 	}
 	else{
-		echo "{\"Checkout\":{\"id_output\":\"3\",\"desc_output\":\"N„o h· checkin para o usu·rio.\"}}";
+		echo "{\"Checkout\":{\"id_output\":\"3\",\"desc_output\":\"NÔøΩo hÔøΩ checkin para o usuÔøΩrio.\"}}";
 	}
 	
 	$conn = null;
@@ -909,7 +910,7 @@ function listaMatches($id_usuario)
 	
 	} catch(PDOException $e){
 		
-		echo '{"Erro":{"id_output":"2","desc_output":"Erro ao listar combinaÁıes. Tente novamente mais tarde."}}';
+		echo '{"Erro":{"id_output":"2","desc_output":"Erro ao listar combinaÔøΩÔøΩes. Tente novamente mais tarde."}}';
 		die();
 	}
 	
@@ -932,18 +933,18 @@ function unMatch()
 		$stmt->bindParam("id_usuario2",$match->id_usuario2);
 		$stmt->execute();
 		
-		echo "{\"UnMatch\":{\"id_output\":\"1\",\"desc_output\":\"DescombinaÁ„o realizada.\"}}";
+		echo "{\"UnMatch\":{\"id_output\":\"1\",\"desc_output\":\"DescombinaÔøΩÔøΩo realizada.\"}}";
 		
 	} catch(PDOException $e){
 		
-		echo '{"Erro":{"id_output":"2","desc_output":"Erro ao desfazer descombinaÁ„o. Tente novamente mais tarde."}}';
+		echo '{"Erro":{"id_output":"2","desc_output":"Erro ao desfazer descombinaÔøΩÔøΩo. Tente novamente mais tarde."}}';
 		die();
 	}
 
 	$conn = null;
 }
 
-//FunçÁıes que chamam a Interface
+//FunÔøΩÔøΩÔøΩes que chamam a Interface
 function listaTodosUsuariosQuickblox()
 {
 	$request = \Slim\Slim::getInstance()->request();
@@ -956,7 +957,7 @@ function listaTodosUsuariosQuickblox()
 		echo CallAPIQB("GET","http://api.quickblox.com/users.json",false,"QB-Token: ".$token);
 	} catch(PDOException $e){
 		
-		echo '{"Erro":{"id_output":"1","desc_output":"Erro ao enviar a requisição para o QuickBlox."}}';
+		echo '{"Erro":{"id_output":"1","desc_output":"Erro ao enviar a requisiÔøΩÔøΩo para o QuickBlox."}}';
 		die();
 	}
 }
@@ -985,7 +986,7 @@ function CallAPIQB($method, $url, $data, $qbtoken)
     
     curl_setopt($curl, CURLOPT_HTTPHEADER, array($qbtoken));
 
-    //Autenticação se necessário:
+    //AutenticaÔøΩÔøΩo se necessÔøΩrio:
     curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
     curl_setopt($curl, CURLOPT_USERPWD, "username:password");
 
