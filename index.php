@@ -22,8 +22,6 @@ $app->response()->header('Content-Type', 'application/json;charset=utf-8');
 // http://roomnants.com/onrange/api/checkin/fazcheckout
 // http://roomnants.com/onrange/api/checkin/unMatch
 
-// Teste GIT
-
 //GET METHODS
 $app->get('/', function () { echo "{\"Erro\":\"diret�rio raiz\"}"; }); //erro no raiz
 $app->get('/local/listatodoslocais','listaTodosLocais'); //traz todos locais
