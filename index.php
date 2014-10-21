@@ -36,7 +36,7 @@ $app->post('/usuario/adicionausuario','adicionaUsuario'); //cria novo usuario
 $app->post('/checkin/adicionacheckin','adicionaCheckin'); //faz checkin
 $app->post('/like/adicionalike','adicionaLike'); //d� like em algu�m, em algum local
 $app->post('/usuario/login','loginUsuario'); //faz login de usu�rio
-$app->post('/usuario/apagausuario','apagaUsuario'); //apaga usu�rio
+$app->post('/usuario/exclui','apagaUsuario'); //apaga usu�rio
 
 //PUT METHODS
 $app->put('/checkin/fazcheckout','fazCheckout'); //cancela o checkin vigente do usu�rio
