@@ -687,6 +687,15 @@ function loginUsuario()
 		
 		echo "{\"Usuario\":" . json_encode($usuario) . "}";	
 		$conn = null;
+                
+//DESSE JEITO ABAIXO É POSSÍVEL TROCAR O STATUS DO CABEÇALHO E ENVIAR UMA MENSAGEM COMO RESPOSTA
+//ERRO 500
+//MENSAGEM: Usuario bloqueado
+//
+//NÃO USAR ACENTUAÇÃO NA MENSAGEM DE RETORNO
+                
+                header('Ed-Return-Message: Usuario bloqueado', true, 500);
+                die;
 		
 	} catch(PDOException $e){
 		
