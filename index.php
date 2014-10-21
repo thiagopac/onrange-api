@@ -36,6 +36,7 @@ $app->post('/usuario/adicionausuario','adicionaUsuario'); //cria novo usuario
 $app->post('/checkin/adicionacheckin','adicionaCheckin'); //faz checkin
 $app->post('/like/adicionalike','adicionaLike'); //d� like em algu�m, em algum local
 $app->post('/usuario/login','loginUsuario'); //faz login de usu�rio
+$app->post('/usuario/apagausuario','apagaUsuario'); //apaga usu�rio
 
 //PUT METHODS
 $app->put('/checkin/fazcheckout','fazCheckout'); //cancela o checkin vigente do usu�rio
@@ -333,7 +334,7 @@ function adicionaUsuario()
 		$usuario->desc_output = "Usuario criado com sucesso. Login realizado com sucesso.";
 		
 	}
-	else{	   //--------------####### USU�RIO EXISTENTE #######--------------//
+	else{	   //--------------####### USUÁRIO EXISTENTE #######--------------//
 	
 		//Verifica se houve altera��o das informa��es pessoais
 		
@@ -992,4 +993,29 @@ function CallAPIQB($method, $url, $data, $qbtoken)
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
     return curl_exec($curl);
+}
+
+function apagaUsuario()
+{
+	$request = \Slim\Slim::getInstance()->request();
+	$usuario = json_decode($request->getBody());
+	
+	$sql = "UPDATE USUARIO SET dt_exclusao = NOW() 
+			WHERE (id_facebook = :id_facebook)";
+		
+	try{
+		$conn = getConn();
+		$stmt = $conn->prepare($sql);
+		$stmt->bindParam("id_facebook",$usuario->facebook_usuario);
+		$stmt->execute();
+		
+		echo "{\"ApagaUsuario\":{\"id_output\":\"1\",\"desc_output\":\"Usuario apagado.\"}}";
+		
+	} catch(PDOException $e){
+		
+		echo '{"Erro":{"id_output":"2","desc_output":"Erro ao apagar usuario. Tente novamente mais tarde."}}';
+		die();
+	}
+
+	$conn = null;
 }
