@@ -994,7 +994,7 @@ function CallAPIQB($method, $url, $data, $qbtoken)
     
     curl_setopt($curl, CURLOPT_HTTPHEADER, array($qbtoken));
 
-    //Autentica��o se necess�rio:
+    //Autenticação se necessário:
     curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
     curl_setopt($curl, CURLOPT_USERPWD, "username:password");
 
