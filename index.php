@@ -694,8 +694,8 @@ function loginUsuario()
 //
 //NÃO USAR ACENTUAÇÃO NA MENSAGEM DE RETORNO
                 
-                header('Ed-Return-Message: Usuario bloqueado', true, 500);
-                die;
+//                header('Ed-Return-Message: Usuario bloqueado', true, 500);
+//                die;
 		
 	} catch(PDOException $e){
 		
