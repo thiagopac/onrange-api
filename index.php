@@ -81,7 +81,7 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 	$maxLong = $longitude_atual + rad2deg($range/6371/cos(deg2rad($latitude_atual)));
 	$minLong = $longitude_atual - rad2deg($range/6371/cos(deg2rad($latitude_atual)));
 	
-	//Verifica qual sele��o deve ser aplicada, se por checkins ou por dist�ncia
+	//Verifica qual seleção deve ser aplicada, se por checkins ou por distância
 	if($order_by=="checkin"){
 		$sql = "SELECT id_local, nome, latitude, longitude, 
 					acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
@@ -132,8 +132,17 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 		$conn = null;
 		
 	} catch(PDOException $e){
-        echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-		die();
+        
+            //ERRO 502
+            //MENSAGEM: Erro na listagem de locais
+            
+            header('Ed-Return-Message: Erro na listagem de locais', true, 502);
+            echo '[]';
+                                
+            die();
+            
+            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+
     }
 }
 
@@ -158,8 +167,15 @@ function adicionaLocal()
 		
 	} catch(PDOException $e){
 		
-		echo '{"Erro":{"id_output":"2","desc_output":"'. $e->getMessage() .'"}}';
-		die();
+            //ERRO 503
+            //MENSAGEM: Erro ao adicionar novo local
+            
+            header('Ed-Return-Message: Erro ao adicionar novo local', true, 503);
+            echo '[]';
+                                
+            die();
+            
+            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 	}
 	
 	//Cria o local na tabela de controle de checkins correntes
@@ -172,8 +188,16 @@ function adicionaLocal()
 
 	} catch(PDOException $e){
 		
-		echo '{"Erro":{"id_output":"2","desc_output":"Erro ao adicionar novo local! Tente novamente mais tarde."}}';
-		die();
+            //ERRO 504
+            //MENSAGEM: Erro ao adicionar novo local em checkins correntes
+            
+            header('Ed-Return-Message: Erro ao adicionar novo local em checkins correntes', true, 504);
+            echo '[]';
+                                
+            die();
+            
+            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+                
 	}
 	
 	//Checkout no local anterior
@@ -190,8 +214,16 @@ function adicionaLocal()
 		
 	} catch(PDOException $e){
 		
-		echo '{"Erro":{"id_output":"2","desc_output":"Erro ao fazer checkout! Tente novamente mais tarde."}}';
-		die();
+            //ERRO 505
+            //MENSAGEM: Erro ao realizar checkout no local anterior
+            
+            header('Ed-Return-Message: Erro ao realizar checkout no local anterior', true, 505);
+            echo '[]';
+                                
+            die();
+            
+            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+                
 	}	
 	
 	$checkin = $stmt->fetch(PDO::FETCH_OBJ);
@@ -206,9 +238,15 @@ function adicionaLocal()
 			$stmt->execute();
 			
 		} catch(PDOException $e){
-			
-			echo '{"Erro":{"id_output":"2","desc_output":"Erro ao fazer checkout. Tente novamente mais tarde."}}';
-			die();
+                    //ERRO 505
+                    //MENSAGEM: Erro ao realizar checkout no local anterior
+
+                    header('Ed-Return-Message: Erro ao realizar checkout no local anterior', true, 505);
+                    echo '[]';
+
+                    die();
+
+                    //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 		}
 		
 		//Atualiza a tabela de checkins correntes, decrementando 1 do local anterior
@@ -223,8 +261,15 @@ function adicionaLocal()
 		
 		} catch(PDOException $e){
 			
-			echo '{"Erro":{"id_output":"2","desc_output":"Erro ao fazer checkout. Tente novamente mais tarde."}}';
-			die();
+                    //ERRO 506
+                    //MENSAGEM: Erro ao atualizar checkins correntes
+
+                    header('Ed-Return-Message: Erro ao atualizar checkins correntes', true, 506);
+                    echo '[]';
+
+                    die();
+
+                    //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 		}
 	
 	}
@@ -240,8 +285,15 @@ function adicionaLocal()
 
 	} catch(PDOException $e){
 	
-		echo "{\"Erro\":{\"id_output\":\"2\",\"desc_output\":\"". $e->getMessage() ."\"}}";
-		die();
+            //ERRO 507
+            //MENSAGEM: Erro ao fazer checkin no local criado
+
+            header('Ed-Return-Message: Erro ao fazer checkin no local criado', true, 507);
+            echo '[]';
+
+            die();
+
+            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 	}
 	
 	// Atualiza tabela de checkins correntes, incrementando 1 ao local novo
@@ -252,8 +304,16 @@ function adicionaLocal()
 	$stmt->bindParam("id_local",$local->id_local);
 	$stmt->execute();
 	} catch(PDOException $e){
-		echo '{"Erro":{"id_output":"2","desc_output":"Erro ao fazer checkin. Tente novamente mais tarde."}}';
-		die();
+            
+            //ERRO 506
+            //MENSAGEM: Erro ao atualizar checkins correntes
+
+            header('Ed-Return-Message: Erro ao atualizar checkins correntes', true, 506);
+            echo '[]';
+
+            die();
+
+            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 	}
 	
 	// Retorna o objeto do Local criado
@@ -336,10 +396,10 @@ function adicionaUsuario()
 	}
 	else{	   //--------------####### USUÁRIO EXISTENTE #######--------------//
 	
-		//Verifica se houve altera��o das informa��es pessoais
+		//Verifica se houve alteração das informações pessoais
 		
 		if($registro_usuario->nome != $usuario->nome_usuario || $registro_usuario->sexo != $usuario->sexo_usuario || $registro_usuario->email != $usuario->email_usuario || $registro_usuario->localizacao != $usuario->localizacao_usuario || $registro_usuario->aniversario != $usuario->aniversario_usuario){
-			//Se houve altera��o em algum dos dados, atualiza o registro do usuário na base do Onrange
+			//Se houve alteração em algum dos dados, atualiza o registro do usuário na base do Onrange
 			
 			$sql = "UPDATE USUARIO SET nome = :nome_usuario, sexo = :sexo_usuario, email = :email_usuario, localizacao = :localizacao_usuario, aniversario = :aniversario_usuario WHERE id_usuario = :id_usuario";
 			try{
@@ -404,7 +464,7 @@ function adicionaCheckin()
 	
 	$checkin_vigente = $stmt->fetch(PDO::FETCH_OBJ);
 	
-	if($checkin_vigente){		//Se h� checkin vigente para o usuário
+	if($checkin_vigente){		//Se há checkin vigente para o usuário
 	
 		//retorna checkin_vigente = 1, o id e o local do checkin vigente
 			
@@ -412,7 +472,7 @@ function adicionaCheckin()
 		$checkin->id_checkin_anterior = $checkin_vigente->id_checkin;
 		$checkin->id_local_anterior = $checkin_vigente->id_local;
 	
-		// Verifica se o �ltimo checkin foi realizado h� menos de 5 minutos.
+		// Verifica se o último checkin foi realizado há menos de 5 minutos.
 		
 		if($checkin_vigente->minutos_ultimo_checkin > 0){		
 		
@@ -440,7 +500,7 @@ function adicionaCheckin()
 				die();
 			}
 		}
-		// Se o ultimo checkin foi realizado h� menos de 5 minutos, retorna mensagem de erro.
+		// Se o ultimo checkin foi realizado há menos de 5 minutos, retorna mensagem de erro.
 		else{
 			$checkin->id_output = "3";
 			$checkin->desc_output = "Checkin anterior em menos de 5 minutos.";
@@ -688,19 +748,15 @@ function loginUsuario()
 		echo "{\"Usuario\":" . json_encode($usuario) . "}";	
 		$conn = null;
                 
-//DESSE JEITO ABAIXO É POSSÍVEL TROCAR O STATUS DO CABEÇALHO E ENVIAR UMA MENSAGEM COMO RESPOSTA
-//ERRO 500
-//MENSAGEM: Usuario bloqueado
-//
-//NÃO USAR ACENTUAÇÃO NA MENSAGEM DE RETORNO
-                
-//                header('Ed-Return-Message: Usuario bloqueado', true, 500);
-//                die;
-		
 	} catch(PDOException $e){
 		
-		echo '{"Erro":{"id_output":"2","desc_output":"Erro ao buscar usuario. Tente novamente mais tarde."}}';
-		die();
+            //ERRO 501
+            //MENSAGEM: Usuario bloqueado
+            
+            header('Ed-Return-Message: Usuario inexistente ou bloqueado', true, 501);	
+            echo '[]';
+                                
+            die();
 	}
 }
 
