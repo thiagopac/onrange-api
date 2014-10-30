@@ -346,8 +346,15 @@ function adicionaUsuario()
 		$stmt->execute();
 	} catch(PDOException $e){
 		
-		echo '{"Erro":{"id_output":"2","desc_output":"Erro ao buscar usuario. Tente novamente mais tarde."}}';
-		die();
+            //ERRO 508
+            //MENSAGEM: Erro ao buscar usuario
+
+            header('Ed-Return-Message: Erro ao buscar usuario', true, 508);
+            echo '[]';
+
+            die();
+
+            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 	}
 		
 	$registro_usuario = $stmt->fetch(PDO::FETCH_OBJ);
@@ -369,8 +376,15 @@ function adicionaUsuario()
 			$stmt->execute();
 		} catch(PDOException $e){
 			
-			echo '{"Erro":{"id_output":"2","desc_output":"Erro ao adicionar novo usuario. Tente novamente mais tarde."}}';
-			die();
+                    //ERRO 509
+                    //MENSAGEM: Erro ao adicionar novo usuario
+
+                    header('Ed-Return-Message: Erro ao adicionar novo usuario', true, 509);
+                    echo '[]';
+
+                    die();
+
+                    //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 		}
 		
 		// Cria usuário no QuickBlox
@@ -383,8 +397,15 @@ function adicionaUsuario()
 			$usuario->QB = CallAPIQB("POST","http://api.quickblox.com/users.json",$dados_usuario,"QB-Token: " . $usuario->qbtoken);
 		} catch(PDOException $e){
 		
-			echo '{"Erro":{"id_output":"2","desc_output":"Erro ao criar usuário QB. Tente novamente mais tarde."}}';
-			die();
+                    //ERRO 510
+                    //MENSAGEM: Erro ao criar usuario no QB
+
+                    header('Ed-Return-Message: Erro ao criar usuario no QB', true, 510);
+                    echo '[]';
+
+                    die();
+
+                    //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 		}
 		
 		$usuario->id_usuario = $conn->lastInsertId();
@@ -412,8 +433,17 @@ function adicionaUsuario()
 				$stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
 				$stmt->execute();
 			} catch(PDOException $e){
-				echo '{"Erro":{"id_output":"2","desc_output":"Erro ao atualizar dados do usuário. Tente novamente mais tarde."}}';
-				die();
+                            
+                            //ERRO 511
+                            //MENSAGEM: Erro ao autalizar usuario
+
+                            header('Ed-Return-Message: Erro ao autalizar usuario', true, 511);
+                            echo '[]';
+
+                            die();
+
+                            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+                    
 			}
 		
 			// Atualiza usuário no QuickBlox
@@ -426,8 +456,15 @@ function adicionaUsuario()
 				$usuario->QB = CallAPIQB("PUT","http://api.quickblox.com/users/1328.json",$dados_usuario,"QB-Token: " . $usuario->qbtoken);
 			} catch(PDOException $e){
 			
-				echo '{"Erro":{"id_output":"2","desc_output":"Erro ao atualizar usuário QB. Tente novamente mais tarde."}}';
-				die();
+                            //ERRO 512
+                            //MENSAGEM: Erro ao autalizar usuario no QB
+
+                            header('Ed-Return-Message: Erro ao autalizar usuario no QB', true, 512);
+                            echo '[]';
+
+                            die();
+
+                            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 			}
 
 		}
@@ -458,8 +495,15 @@ function adicionaCheckin()
 		$stmt->execute();
 	} catch(PDOException $e){
 		
-		echo '{"Erro":{"id_output":"2","desc_output":"Erro ao buscar checkins. Tente novamente mais tarde."}}';
-		die();
+            //ERRO 513
+            //MENSAGEM: Erro ao buscar checkins
+
+            header('Ed-Return-Message: Erro ao buscar checkins', true, 513);
+            echo '[]';
+
+            die();
+
+            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 	}
 	
 	$checkin_vigente = $stmt->fetch(PDO::FETCH_OBJ);
@@ -484,8 +528,15 @@ function adicionaCheckin()
 			$stmt->bindParam("id_checkin",$checkin_vigente->id_checkin);
 			$stmt->execute();
 			} catch(PDOException $e){
-				echo '{"Erro":{"id_output":"2","desc_output":"Erro ao fazer checkout. Tente novamente mais tarde."}}';
-				die();
+                            //ERRO 514
+                            //MENSAGEM: Erro ao fazer checkout pre-checkin
+
+                            header('Ed-Return-Message: Erro ao fazer checkout pre-checkin', true, 514);
+                            echo '[]';
+
+                            die();
+
+                            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 			}
 			
 			// Atualiza tabela de checkins correntes, decrementando 1 do local anterior
@@ -496,14 +547,31 @@ function adicionaCheckin()
 			$stmt->bindParam("id_local",$checkin_vigente->id_local);
 			$stmt->execute();
 			} catch(PDOException $e){
-				echo '{"Erro":{"id_output":"2","desc_output":"Erro ao fazer checkout. Tente novamente mais tarde."}}';
-				die();
+                            //ERRO 515
+                            //MENSAGEM: Erro ao decrementar tabela de checkins correntes
+
+                            header('Ed-Return-Message: Erro ao decrementar tabela de checkins correntes', true, 515);
+                            echo '[]';
+
+                            die();
+
+                            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 			}
 		}
 		// Se o ultimo checkin foi realizado há menos de 5 minutos, retorna mensagem de erro.
 		else{
-			$checkin->id_output = "3";
-			$checkin->desc_output = "Checkin anterior em menos de 5 minutos.";
+                        //ERRO 516
+                        //MENSAGEM: Checkin anterior em menos de 5 minutos.
+
+                        header('Ed-Return-Message: Checkin anterior em menos de 5 minutos', true, 516);
+                        echo '[]';
+
+                        die();
+
+                        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+                                        
+                        //$checkin->id_output = "3";
+			//$checkin->desc_output = "Checkin anterior em menos de 5 minutos.";
 		}
 	}
 	else{
@@ -526,8 +594,15 @@ function adicionaCheckin()
 
 	} catch(PDOException $e){
 	
-		echo "{\"Erro\":{\"id_output\":\"2\",\"desc_output\":\"". $e->getMessage() ."\"}}";
-		die();
+            //ERRO 517
+            //MENSAGEM: Erro ao fazer checkin
+
+            header('Ed-Return-Message: Erro ao fazer checkin', true, 517);
+            echo '[]';
+
+            die();
+
+            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 	}
 	
 	// Atualiza tabela de checkins correntes, incrementando 1 ao local novo
@@ -538,8 +613,15 @@ function adicionaCheckin()
 	$stmt->bindParam("id_local",$checkin->id_local);
 	$stmt->execute();
 	} catch(PDOException $e){
-		echo '{"Erro":{"id_output":"2","desc_output":"Erro ao fazer checkin. Tente novamente mais tarde."}}';
-		die();
+            //ERRO 518
+            //MENSAGEM: Erro ao incrementar tabela de checkins correntes
+
+            header('Ed-Return-Message: Erro ao incrementar tabela de checkins correntes', true, 518);
+            echo '[]';
+
+            die();
+
+            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 	}
 
 	$checkin->id_output = "1";
