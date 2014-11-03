@@ -1231,7 +1231,7 @@ function unMatch()
     
     try{
         
-        $unmatch->apaga_chat = CallAPIQB("DELETE","https://api.quickblox.com/chat/Dialog/" . $unmatch->id_chat . ".json",,"QB-Token: " . $unmatch->qbtoken);
+        $unmatch->apaga_chat = CallAPIQB("DELETE","https://api.quickblox.com/chat/Dialog/" . $unmatch->id_chat . ".json","","QB-Token: " . $unmatch->qbtoken);
             
     } catch(PDOException $e){
 
