@@ -1227,7 +1227,22 @@ function listaMatches($id_usuario)
 function unMatch()
 {
     $request = \Slim\Slim::getInstance()->request();
-    $match = json_decode($request->getBody());
+    $unmatch = json_decode($request->getBody());
+    
+    try{
+        
+        $unmatch->apaga_chat = CallAPIQB("DELETE","https://api.quickblox.com/chat/Dialog/" . $unmatch->id_chat . ".json",,"QB-Token: " . $unmatch->qbtoken);
+            
+    } catch(PDOException $e){
+
+        //ERRO 544
+        //MENSAGEM: Erro ao apagar chat no QB
+
+        header('Ed-Return-Message: Erro ao apagar chat no QB', true, 544);	
+        echo '[]';
+
+        die();
+    }
 
     $sql = "UPDATE MATCHES SET dt_block = NOW() 
             WHERE (id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2)
@@ -1236,11 +1251,9 @@ function unMatch()
     try{
             $conn = getConn();
             $stmt = $conn->prepare($sql);
-            $stmt->bindParam("id_usuario1",$match->id_usuario1);
-            $stmt->bindParam("id_usuario2",$match->id_usuario2);
+            $stmt->bindParam("id_usuario1",$unmatch->id_usuario1);
+            $stmt->bindParam("id_usuario2",$unmatch->id_usuario2);
             $stmt->execute();
-
-            echo "{\"UnMatch\":{\"id_output\":\"1\",\"desc_output\":\"Descombinação realizada.\"}}";
 
     } catch(PDOException $e){
 
@@ -1252,7 +1265,12 @@ function unMatch()
 
         die();
     }
-
+    
+    $unmatch->id_output = 1;
+    $unmatch->desc_output = "Descombinação realizada.";
+    
+    echo "{\"UnMatch\":" . json_encode($unmatch) . "}";
+    
     $conn = null;
 }
 
@@ -1296,6 +1314,9 @@ function CallAPIQB($method, $url, $data, $qbtoken)
             break;
         case "PUT":
             curl_setopt($curl, CURLOPT_PUT, 1);
+            break;
+        case "DELETE":
+            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
             break;
         default:
             if ($data)
