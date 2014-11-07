@@ -1349,7 +1349,7 @@ function apagaUsuario()
         $stmt->bindParam("id_facebook",$usuario->facebook_usuario);
         $stmt->execute();
 
-        echo "{\"ApagaUsuario\":{\"id_output\":\"1\",\"desc_output\":\"Usuario apagado.\"}}";
+        echo "{\"Usuario\":{\"id_output\":\"1\",\"desc_output\":\"Usuario apagado.\"}}";
 
     } catch(PDOException $e){
 
