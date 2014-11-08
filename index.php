@@ -36,11 +36,11 @@ $app->post('/usuario/adicionausuario','adicionaUsuario'); //cria novo usuario
 $app->post('/checkin/adicionacheckin','adicionaCheckin'); //faz checkin
 $app->post('/like/adicionalike','adicionaLike'); //dá like em algu�m, em algum local
 $app->post('/usuario/login','loginUsuario'); //faz login de usuário
-$app->post('/usuario/exclui','apagaUsuario'); //apaga usuário
 
 //PUT METHODS
 $app->put('/checkin/fazcheckout','fazCheckout'); //cancela o checkin vigente do usuário
 $app->put('/match/unmatch','unMatch'); //cancela o Match com o usuário informado
+$app->put('/usuario/exclui','apagaUsuario'); //apaga usuário
 
 //INTERFACES com QUICKBLOX
 $app->post('/quickblox/todosusuarios','listaTodosUsuariosQuickblox'); //cria novo usuario
