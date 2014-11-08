@@ -1269,7 +1269,7 @@ function unMatch()
     $unmatch->id_output = 1;
     $unmatch->desc_output = "Descombinação realizada.";
     
-    echo "{\"UnMatch\":" . json_encode($unmatch) . "}";
+    echo "{\"Match\":" . json_encode($unmatch) . "}";
     
     $conn = null;
 }
