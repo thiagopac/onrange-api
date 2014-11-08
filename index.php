@@ -895,58 +895,72 @@ function loginUsuario()
 
     //Verifica e devolve seus dados
 
-    $sql = "SELECT USUARIO.id_usuario, USUARIO.id_facebook AS facebook_usuario, USUARIO.id_qb AS quickblox_usuario, USUARIO.nome AS nome_usuario, USUARIO.sexo AS sexo_usuario, USUARIO.dt_usuario, USUARIO.dt_exclusao, USUARIO.email AS email_usuario 
-                    FROM USUARIO WHERE USUARIO.id_facebook = :id_facebook";
+    $sql = "SELECT USUARIO.id_usuario, USUARIO.id_facebook AS facebook_usuario, USUARIO.id_qb AS quickblox_usuario, USUARIO.nome AS nome_usuario, USUARIO.sexo AS sexo_usuario, USUARIO.dt_usuario, USUARIO.dt_exclusao, USUARIO.dt_bloqueio, USUARIO.email AS email_usuario 
+            FROM USUARIO WHERE USUARIO.id_facebook = :id_facebook";
     try{
-            $conn = getConn();
-            $stmt = $conn->prepare($sql);
-            $stmt->bindParam("id_facebook",$usuario->facebook_usuario);
-            $stmt->execute();
-            $usuario = $stmt->fetch(PDO::FETCH_OBJ);
+        $conn = getConn();
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam("id_facebook",$usuario->facebook_usuario);
+        $stmt->execute();
+        
+        $usuario = $stmt->fetch(PDO::FETCH_OBJ);
 
-        } catch(PDOException $e){
+    } catch(PDOException $e){
 
-            //ERRO 530
-            //MENSAGEM: Erro ao buscar usuario
+        //ERRO 530
+        //MENSAGEM: Erro ao buscar usuario
 
-            header('Ed-Return-Message: Erro ao buscar usuario', true, 530);	
+        header('Ed-Return-Message: Erro ao buscar usuario', true, 530);	
+        echo '[]';
+
+        die();
+    }
+
+    //Se o usuário foi encontrado
+    if($usuario){
+
+        //Verificando se usuario foi bloqueado logicamente através do preenchimento do campo DT_BLOQUEIO
+        if($usuario->dt_bloqueio != null){
+
+            //ERRO 501
+            //MENSAGEM: Usuario bloqueado
+
+            header('Ed-Return-Message: Usuario bloqueado', true, 501);	
             echo '[]';
 
-            die();
-        }
+            die();	
 
-        //Se o usuário foi encontrado
-        if($usuario){
-
-            //Verificando se usuario foi excluído logicamente através do preenchimento do campo DT_EXCLUSAO
-            if($usuario->dt_exclusao == null){
-
-                echo "{\"Usuario\":" . json_encode($usuario) . "}";
-
-            }
-            else{
-                
-                //ERRO 501
-                //MENSAGEM: Usuario excluido
-
-                header('Ed-Return-Message: Usuario excluido', true, 501);	
-                echo '[]';
-
-                die();	
-            }
-        }else{
+        } //Verificando se usuario foi excluído logicamente através do preenchimento do campo DT_EXCLUSAO
+        elseif($usuario->dt_exclusao != null){
 
             //ERRO 500
-            //MENSAGEM: Usuario inexistente
+            //MENSAGEM: Usuario inexistente ou excluido
 
-            header('Ed-Return-Message: Usuario inexistente', true, 500);	
+            header('Ed-Return-Message: Usuario inexistente ou excluido', true, 500);	
             echo '[]';
 
             die();
 
         }
+        else{
 
-        $conn = null;
+            echo "{\"Usuario\":" . json_encode($usuario) . "}";
+
+        }
+    }
+    else{
+
+        //ERRO 500
+        //MENSAGEM: Usuario inexistente ou excluido
+
+        header('Ed-Return-Message: Usuario inexistente ou excluido', true, 500);	
+        echo '[]';
+
+        die();
+
+    }
+
+    $conn = null;
 }
 
 function listaUsuariosCheckin($id_local,$sexo,$id_usuario)
