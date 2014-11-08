@@ -930,30 +930,45 @@ function loginUsuario()
 
             die();	
 
-        } //Verificando se usuario foi excluído logicamente através do preenchimento do campo DT_EXCLUSAO
-        elseif($usuario->dt_exclusao != null){
-
-            //ERRO 500
-            //MENSAGEM: Usuario inexistente ou excluido
-
-            header('Ed-Return-Message: Usuario inexistente ou excluido', true, 500);	
-            echo '[]';
-
-            die();
-
-        }
+        } 
         else{
+            if($usuario->dt_exclusao != null){ //Verificando se usuario foi excluído logicamente através do preenchimento do campo DT_EXCLUSAO
 
+                //Seta NULL no campo DT_EXCLUSAO, pois o usuario deseja retornar ao aplicativo
+
+                $sql = "UPDATE USUARIO SET dt_exclusao = NULL 
+                WHERE id_usuario = :id_usuario";
+
+                try{
+                        $stmt = $conn->prepare($sql);
+                        $stmt->bindParam("id_usuario",$usuario->id_usuario);
+                        $stmt->execute();
+
+                } catch(PDOException $e){
+
+                    //ERRO 546
+                    //MENSAGEM: Erro ao remover data de exclusao do usuario
+
+                    header('Ed-Return-Message: Erro ao remover data de exclusao do usuario', true, 546);	
+                    echo '[]';
+
+                    die();
+                }
+            }
+        
+            //Login realizado com sucesso. Retorna o objeto com os dados do usuário
+            
             echo "{\"Usuario\":" . json_encode($usuario) . "}";
-
+            
         }
+
     }
     else{
 
         //ERRO 500
-        //MENSAGEM: Usuario inexistente ou excluido
+        //MENSAGEM: Usuario inexistente
 
-        header('Ed-Return-Message: Usuario inexistente ou excluido', true, 500);	
+        header('Ed-Return-Message: Usuario inexistente', true, 500);	
         echo '[]';
 
         die();
