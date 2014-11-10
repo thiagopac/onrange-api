@@ -1275,12 +1275,34 @@ function unMatch()
     }
     
     $sql = "SELECT id_usuario FROM USUARIO
+            WHERE id_facebook = :id_facebook_usuario";
+
+    try{
+            $conn = getConn();
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam("id_facebook_usuario",$unmatch->facebook_usuario);
+            $stmt->execute();
+            
+            $usuario1 = $stmt->fetch(PDO::FETCH_OBJ);
+
+    } catch(PDOException $e){
+
+        //ERRO 545
+        //MENSAGEM: Erro ao buscar ID do usuario 1
+
+        header('Ed-Return-Message: Erro ao buscar ID do usuario 1', true, 546);	
+        echo '[]';
+
+        die();
+    }
+    
+    $sql = "SELECT id_usuario FROM USUARIO
             WHERE id_facebook = :id_facebook_usuario2";
 
     try{
             $conn = getConn();
             $stmt = $conn->prepare($sql);
-            $stmt->bindParam("id_facebook_usuario2",$unmatch->id_facebook_usuario2);
+            $stmt->bindParam("id_facebook_usuario2",$unmatch->facebook_usuario2);
             $stmt->execute();
             
             $usuario2 = $stmt->fetch(PDO::FETCH_OBJ);
@@ -1295,14 +1317,14 @@ function unMatch()
 
         die();
     }
-
+    
     $sql = "UPDATE MATCHES SET dt_block = NOW() 
             WHERE (id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2)
               OR  (id_usuario1 = :id_usuario2 AND id_usuario2 = :id_usuario1)";
 
     try{
             $stmt = $conn->prepare($sql);
-            $stmt->bindParam("id_usuario1",$unmatch->id_usuario1);
+            $stmt->bindParam("id_usuario1",$usuario1->id_usuario);
             $stmt->bindParam("id_usuario2",$usuario2->id_usuario);
             $stmt->execute();
 
