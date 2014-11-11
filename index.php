@@ -1422,8 +1422,6 @@ function apagaUsuario()
         $stmt->bindParam("id_facebook",$usuario->facebook_usuario);
         $stmt->execute();
 
-        echo "{\"Usuario\":{\"id_output\":\"1\",\"desc_output\":\"Usuario apagado.\"}}";
-
     } catch(PDOException $e){
 
         //ERRO 542
@@ -1434,6 +1432,21 @@ function apagaUsuario()
 
         die();
     }
+    
+    if($stmt->rowCount()){
+    
+        echo "{\"Usuario\":{\"id_output\":\"1\",\"desc_output\":\"Usuario apagado.\"}}";
+    
+    }
+    else{
+        //ERRO 542
+        //MENSAGEM: Erro ao apagar usuario
 
+        header('Ed-Return-Message: Erro ao apagar usuario', true, 542);	
+        echo '[]';
+
+        die();
+    }
+    
     $conn = null;
 }
