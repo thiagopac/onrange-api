@@ -1414,7 +1414,7 @@ function apagaUsuario()
     $usuario = json_decode($request->getBody());
 
     $sql = "UPDATE USUARIO SET dt_exclusao = NOW() 
-            WHERE (id_facebook = :id_facebook)";
+            WHERE id_facebook = :id_facebook";
 
     try{
         $conn = getConn();
