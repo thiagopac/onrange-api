@@ -85,9 +85,9 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 	if($order_by=="checkin"){
 		$sql = "SELECT id_local, nome, latitude, longitude, 
 					acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
-					qt_checkin, id_tipo_local AS tipo_local
+					qt_checkin, id_tipo_local AS tipo_local, destaque
 				FROM (
-						SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local
+						SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, LOCAL.destaque
 						FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
 						WHERE
 						CHECKINS_CORRENTES.qt_checkin > 0
@@ -101,9 +101,9 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 	}else{
 		$sql = "SELECT id_local, nome, latitude, longitude, 
 					acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
-					qt_checkin, id_tipo_local AS tipo_local
+					qt_checkin, id_tipo_local AS tipo_local, destaque
 				FROM (
-						SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local
+						SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, LOCAL.destque
 						FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
 						WHERE
 						LOCAL.dt_exclusao IS NULL
