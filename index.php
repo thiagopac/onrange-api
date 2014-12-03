@@ -29,6 +29,7 @@ $app->get('/local/listaLocaisRange/:latitude_atual/:longitude_atual/:range/:orde
 $app->get('/checkin/listaUsuariosCheckin/:id_local/:sexo/:id_usuario','listaUsuariosCheckin'); //traz os usuários com checkin corrente no local informado
 $app->get('/checkin/verificaCheckinUsuario/:id_usuario','verificaCheckinUsuario'); //traz os usuários com checkin corrente no local informado
 $app->get('/match/listaMatches/:id_usuario','listaMatches'); //traz uma lista com todos os matches válidos do usuário informado
+$app->get('/promo/listaPromosUsuario/:id_usuario','listaPromosUsuario'); //traz uma lista com todos as promos do usuário informado
 
 //POST METHODS
 $app->post('/local/adicionalocal','adicionaLocal'); //cria novo local
@@ -1448,5 +1449,37 @@ function apagaUsuario()
         die();
     }
     
+    $conn = null;
+}
+
+function listaPromosUsuario($id_usuario)
+{
+    $sql = "SELECT PROMO.id_promo, PROMO.id_local, PROMO.nome, PROMO.descricao, PROMO.dt_inicio, PROMO.dt_fim, PROMO.lote,
+            PROMO_USUARIO.codigo_promo, PROMO_USUARIO.dt_utilizacao, PROMO_USUARIO.dt_leitura
+            FROM PROMO JOIN PROMO_USUARIO ON PROMO.id_promo = PROMO_USUARIO.id_promo
+            WHERE PROMO_USUARIO.id_usuario = :id_usuario
+                AND PROMO_USUARIO.dt_exclusao IS NOT NULL
+                    ORDER BY PROMO.dt_inicio DESC";
+    try{
+        $conn = getConn();
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam("id_usuario",$id_usuario);
+        $stmt->execute();
+
+        $promos = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+    } catch(PDOException $e){
+
+        //ERRO 547
+        //MENSAGEM: Erro ao buscar promos
+
+        header('Ed-Return-Message: Erro ao buscar promos', true, 547);	
+        echo '[]';
+
+        die();
+    }
+    
+    echo "{\"Promos\":" . json_encode($promos) . "}";
+
     $conn = null;
 }
