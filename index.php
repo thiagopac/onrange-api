@@ -1458,7 +1458,7 @@ function listaPromosUsuario($id_usuario)
             PROMO_USUARIO.codigo_promo, PROMO_USUARIO.dt_utilizacao, PROMO_USUARIO.dt_leitura
             FROM PROMO JOIN PROMO_USUARIO ON PROMO.id_promo = PROMO_USUARIO.id_promo
             WHERE PROMO_USUARIO.id_usuario = :id_usuario
-                AND PROMO_USUARIO.dt_exclusao IS NOT NULL
+                AND PROMO_USUARIO.dt_exclusao IS NULL
                     ORDER BY PROMO.dt_inicio DESC";
     try{
         $conn = getConn();
