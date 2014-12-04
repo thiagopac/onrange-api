@@ -1439,9 +1439,11 @@ function apagaUsuario()
 
 function listaPromosUsuario($id_usuario)
 {
-    $sql = "SELECT PROMO.id_promo, PROMO.id_local, PROMO.nome, PROMO.descricao, PROMO.dt_inicio, PROMO.dt_fim, PROMO.lote,
-            PROMO_USUARIO.codigo_promo, PROMO_USUARIO.dt_utilizacao, PROMO_USUARIO.dt_visualizacao
-            FROM PROMO JOIN PROMO_USUARIO ON PROMO.id_promo = PROMO_USUARIO.id_promo
+    $sql = "SELECT PROMO.id_promo, LOCAL.nome AS local, PROMO.nome, PROMO.descricao, PROMO.dt_inicio, PROMO.dt_fim, PROMO.lote,
+            PROMO_USUARIO_CODIGO.codigo_promo, PROMO_USUARIO.dt_utilizacao, PROMO_USUARIO.dt_visualizacao
+            FROM PROMO JOIN LOCAL ON PROMO.id_local = LOCAL.id_local
+                       JOIN PROMO_USUARIO_CODIGO ON PROMO.id_promo = PROMO_USUARIO_CODIGO.id_promo
+                       JOIN PROMO_USUARIO ON PROMO_USUARIO_CODIGO.id_codigo_promo = PROMO_USUARIO.id_codigo_promo
             WHERE PROMO_USUARIO.id_usuario = :id_usuario
                 AND PROMO_USUARIO.dt_exclusao IS NULL
                     ORDER BY PROMO.dt_inicio DESC";
@@ -1619,6 +1621,39 @@ function adicionaPromoCheckin()
                 die();
 
                 //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+            }
+            
+            //Marca o código como utilizado
+            
+            $sql = "UPDATE PROMO_USUARIO_CODIGO SET dt_utilizacao = NOW() 
+                    WHERE id_codigo_promo = :id_codigo_promo";
+
+            try{
+                $conn = getConn();
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam("id_codigo_promo",$codigo_disponivel->id_codigo_promo);
+                $stmt->execute();
+
+            } catch(PDOException $e){
+
+                //ERRO 553
+                //MENSAGEM: Erro ao marcar codigo como utilizado
+
+                header('Ed-Return-Message: Erro ao marcar codigo como utilizado', true, 553);	
+                echo '[]';
+
+                die();
+            }
+
+            if(!$stmt->rowCount()){
+
+                //ERRO 553
+                //MENSAGEM: Erro ao marcar codigo como utilizado
+
+                header('Ed-Return-Message: Erro ao marcar codigo como utilizado', true, 553);	
+                echo '[]';
+
+                die();
             }
         }
         else{
