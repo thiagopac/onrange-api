@@ -1566,8 +1566,8 @@ function adicionaPromoCheckin()
         
 	//Verifica se ainda há lote disponível para o promo
 			
-	$sql = "SELECT PROMO_USUARIO_CODIGO.id_codigo_promo FROM PROMO_USUARIO_CODIGO JOIN PROMO_USUARIO ON PROMO_USUARIO_CODIGO.id_codigo_promo = PROMO_USUARIO.id_codigo_promo"
-                . " WHERE PROMO_USUARIO.id_promo = :id_promo AND PROMO_USUARIO_CODIGO.dt_utilizacao IS NULL"
+	$sql = "SELECT id_codigo_promo FROM PROMO_USUARIO_CODIGO"
+                . " WHERE id_promo = :id_promo AND dt_utilizacao IS NULL"
                 . " LIMIT 1";
 		
 	try{
@@ -1596,11 +1596,10 @@ function adicionaPromoCheckin()
                
             //Insere na tabela de promoções e usuários
             
-            $sql = "INSERT INTO PROMO_USUARIO (id_promo, id_usuario, id_codigo_promo) VALUES (:id_promo, :id_usuario, :id_codigo_promo)";
+            $sql = "INSERT INTO PROMO_USUARIO (id_usuario, id_codigo_promo) VALUES (:id_usuario, :id_codigo_promo)";
             try{
                     $conn = getConn();
                     $stmt = $conn->prepare($sql);
-                    $stmt->bindParam("id_promo",$promo_usuario->id_promo);
                     $stmt->bindParam("id_usuario",$promo_usuario->id_usuario);
                     $stmt->bindParam("id_codigo_promo",$codigo_disponivel->id_codigo_promo);
                     $stmt->execute();
