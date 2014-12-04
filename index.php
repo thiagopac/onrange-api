@@ -25,6 +25,7 @@ $app->put('/checkin/fazcheckout','fazCheckout'); //cancela o checkin vigente do 
 $app->put('/match/unmatch','unMatch'); //cancela o Match com o usuário informado
 $app->put('/usuario/exclui','apagaUsuario'); //apaga usuário
 $app->put('/promo/marcapromovisualizado','marcaPromoVisualizado'); //marca um Promo como visualizado na caixa de entrada do usuario
+$app->put('/promo/exclui','apagaPromoUsuario'); //apaga um Promo da caixa de entrada de um usuario
 
 //INTERFACES com QUICKBLOX
 $app->post('/quickblox/todosusuarios','listaTodosUsuariosQuickblox'); //cria novo usuario
@@ -1504,6 +1505,51 @@ function marcaPromoVisualizado()
         //MENSAGEM: Erro ao marcar promo visualizado
 
         header('Ed-Return-Message: Erro ao marcar promo visualizado', true, 548);	
+        echo '[]';
+
+        die();
+    }
+    
+    $conn = null;
+}
+
+function apagaPromoUsuario()
+{
+    $request = \Slim\Slim::getInstance()->request();
+    $promo = json_decode($request->getBody());
+
+    $sql = "UPDATE PROMO_USUARIO SET dt_exclusao = NOW() 
+            WHERE id_promo = :id_promo
+              AND id_usuario = :id_usuario";
+
+    try{
+        $conn = getConn();
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam("id_promo",$promo->id_promo);
+        $stmt->bindParam("id_usuario",$promo->id_usuario);
+        $stmt->execute();
+
+    } catch(PDOException $e){
+
+        //ERRO 549
+        //MENSAGEM: Erro ao apagar promo
+
+        header('Ed-Return-Message: Erro ao apagar promo', true, 549);	
+        echo '[]';
+
+        die();
+    }
+    
+    if($stmt->rowCount()){
+    
+        echo "{\"Promo\":{\"id_output\":\"1\",\"desc_output\":\"Promo apagado com sucesso.\"}}";
+    
+    }
+    else{
+        //ERRO 549
+        //MENSAGEM: Erro ao apagar promo
+
+        header('Ed-Return-Message: Erro ao apagar promo', true, 549);	
         echo '[]';
 
         die();
