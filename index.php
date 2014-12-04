@@ -17,8 +17,9 @@ $app->get('/promo/listaPromosUsuario/:id_usuario','listaPromosUsuario'); //traz 
 $app->post('/local/adicionalocal','adicionaLocal'); //cria novo local
 $app->post('/usuario/adicionausuario','adicionaUsuario'); //cria novo usuario
 $app->post('/checkin/adicionacheckin','adicionaCheckin'); //faz checkin
-$app->post('/like/adicionalike','adicionaLike'); //dá like em algu�m, em algum local
+$app->post('/like/adicionalike','adicionaLike'); //dá like em alguém, em algum local
 $app->post('/usuario/login','loginUsuario'); //faz login de usuário
+$app->post('/promo/adicionapromocheckin','adicionaPromoCheckin'); //adiciona à caixa de entrada um Promo relacionado ao checkin do Usuário
 
 //PUT METHODS
 $app->put('/checkin/fazcheckout','fazCheckout'); //cancela o checkin vigente do usuário
@@ -1556,4 +1557,88 @@ function apagaPromoUsuario()
     }
     
     $conn = null;
+}
+
+function adicionaPromoCheckin()
+{
+	$request = \Slim\Slim::getInstance()->request();
+	$promo_usuario = json_decode($request->getBody());
+        
+	//Verifica se ainda há lote disponível para o promo
+			
+	$sql = "SELECT PROMO_USUARIO_CODIGO.id_codigo_promo FROM PROMO_USUARIO_CODIGO JOIN PROMO_USUARIO ON PROMO_USUARIO_CODIGO.id_codigo_promo = PROMO_USUARIO.id_codigo_promo"
+                . " WHERE PROMO_USUARIO.id_promo = :id_promo AND PROMO_USUARIO_CODIGO.dt_utilizacao IS NULL"
+                . " LIMIT 1";
+		
+	try{
+            $conn = getConn();
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam("id_promo",$promo_usuario->id_promo);
+            $stmt->execute();
+		
+	} catch(PDOException $e){
+		
+            //ERRO 550
+            //MENSAGEM: Erro ao verificar codigos de promo disponiveis
+            
+            header('Ed-Return-Message: Erro ao verificar codigos de promo disponiveis', true, 550);
+            echo '[]';
+                                
+            die();
+            
+            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+                
+	}	
+	
+	$codigo_disponivel = $stmt->fetch(PDO::FETCH_OBJ);
+	
+	if($codigo_disponivel){ //Se existe código disponível
+               
+            //Insere na tabela de promoções e usuários
+            
+            $sql = "INSERT INTO PROMO_USUARIO (id_promo, id_usuario, id_codigo_promo) VALUES (:id_promo, :id_usuario, :id_codigo_promo)";
+            try{
+                    $conn = getConn();
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bindParam("id_promo",$promo_usuario->id_promo);
+                    $stmt->bindParam("id_usuario",$promo_usuario->id_usuario);
+                    $stmt->bindParam("id_codigo_promo",$codigo_disponivel->id_codigo_promo);
+                    $stmt->execute();
+                    $promo_usuario->id_promo_usuario = $conn->lastInsertId();
+
+                    $promo_usuario->id_output = "1";
+                    $promo_usuario->desc_output = "Promo adicionado com sucesso.";
+
+            } catch(PDOException $e){
+
+                //ERRO 551
+                //MENSAGEM: Erro ao adicionar promo ao usuario
+
+                header('Ed-Return-Message: Erro ao adicionar promo ao usuario', true, 551);
+                echo '[]';
+
+                die();
+
+                //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+            }
+        }
+        else{
+            
+            //ERRO 552
+            //MENSAGEM: Nao ha lote disponivel
+
+            header('Ed-Return-Message: Nao ha lote disponivel', true, 552);
+            echo '[]';
+
+            die();
+            
+        }
+	
+	
+	// Retorna o objeto do Promo criado
+	
+	echo "{\"Promo\":" . json_encode($promo_usuario) . "}";
+	
+	$conn = null;
+	
 }
