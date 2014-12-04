@@ -4,24 +4,6 @@ require 'Slim/Slim.php';
 $app = new \Slim\Slim();
 $app->response()->header('Content-Type', 'application/json;charset=utf-8');
 
-// GET
-// http://roomnants.com/onrange/api/local/listatodoslocais
-// http://roomnants.com/onrange/api/local/listaLocaisRange
-// http://roomnants.com/onrange/api/checkin/listaUsuariosCheckin
-// http://roomnants.com/onrange/api/checkin/verificaCheckinUsuario
-// http://roomnants.com/onrange/api/match/listaMatches
-// 
-// POST
-// http://roomnants.com/onrange/api/local/adicionalocal {"nome_local":"Clube do Chalezinho","latitude_local":"-19.968165","longitude_local":"-43.957688","id_usuario":"1","tipo_local":"1"}
-// http://roomnants.com/onrange/api/usuario/adicionausuario {"nome_usuario":"João","sexo_usuario":"M","facebook_usuario":"11111111111","email_usuario":"joao@joao.com"}
-// http://roomnants.com/onrange/api/checkin/adicionacheckin {"id_usuario":"1","id_local":"1"}
-// http://roomnants.com/onrange/api/like/adicionalike {"id_usuario1":"1","id_usuario2":"2","id_local":"1"}
-// http://roomnants.com/onrange/api/usuario/login {"facebook_usuario":"100000627704444"}
-//
-// PUT
-// http://roomnants.com/onrange/api/checkin/fazcheckout
-// http://roomnants.com/onrange/api/checkin/unMatch
-
 //GET METHODS
 $app->get('/', function () { echo "{\"Erro\":\"diretório raiz\"}"; }); //erro no raiz
 $app->get('/local/listatodoslocais','listaTodosLocais'); //traz todos locais
@@ -42,6 +24,7 @@ $app->post('/usuario/login','loginUsuario'); //faz login de usuário
 $app->put('/checkin/fazcheckout','fazCheckout'); //cancela o checkin vigente do usuário
 $app->put('/match/unmatch','unMatch'); //cancela o Match com o usuário informado
 $app->put('/usuario/exclui','apagaUsuario'); //apaga usuário
+$app->put('/promo/marcapromovisualizado','marcaPromoVisualizado'); //marca um Promo como visualizado na caixa de entrada do usuario
 
 //INTERFACES com QUICKBLOX
 $app->post('/quickblox/todosusuarios','listaTodosUsuariosQuickblox'); //cria novo usuario
@@ -1455,7 +1438,7 @@ function apagaUsuario()
 function listaPromosUsuario($id_usuario)
 {
     $sql = "SELECT PROMO.id_promo, PROMO.id_local, PROMO.nome, PROMO.descricao, PROMO.dt_inicio, PROMO.dt_fim, PROMO.lote,
-            PROMO_USUARIO.codigo_promo, PROMO_USUARIO.dt_utilizacao, PROMO_USUARIO.dt_leitura
+            PROMO_USUARIO.codigo_promo, PROMO_USUARIO.dt_utilizacao, PROMO_USUARIO.dt_visualizacao
             FROM PROMO JOIN PROMO_USUARIO ON PROMO.id_promo = PROMO_USUARIO.id_promo
             WHERE PROMO_USUARIO.id_usuario = :id_usuario
                 AND PROMO_USUARIO.dt_exclusao IS NULL
@@ -1481,5 +1464,50 @@ function listaPromosUsuario($id_usuario)
     
     echo "{\"Promos\":" . json_encode($promos) . "}";
 
+    $conn = null;
+}
+
+function marcaPromoVisualizado()
+{
+    $request = \Slim\Slim::getInstance()->request();
+    $promo = json_decode($request->getBody());
+
+    $sql = "UPDATE PROMO_USUARIO SET dt_visualizacao = NOW() 
+            WHERE id_promo = :id_promo
+              AND id_usuario = :id_usuario";
+
+    try{
+        $conn = getConn();
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam("id_promo",$promo->id_promo);
+        $stmt->bindParam("id_usuario",$promo->id_usuario);
+        $stmt->execute();
+
+    } catch(PDOException $e){
+
+        //ERRO 548
+        //MENSAGEM: Erro ao marcar promo visualizado
+
+        header('Ed-Return-Message: Erro ao marcar promo visualizado', true, 548);	
+        echo '[]';
+
+        die();
+    }
+    
+    if($stmt->rowCount()){
+    
+        echo "{\"Promo\":{\"id_output\":\"1\",\"desc_output\":\"Promo marcado como visualizado.\"}}";
+    
+    }
+    else{
+        //ERRO 548
+        //MENSAGEM: Erro ao marcar promo visualizado
+
+        header('Ed-Return-Message: Erro ao marcar promo visualizado', true, 548);	
+        echo '[]';
+
+        die();
+    }
+    
     $conn = null;
 }
