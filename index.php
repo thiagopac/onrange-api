@@ -1147,7 +1147,7 @@ function fazCheckout()
 
 function verificaCheckinUsuario($id_usuario)
 {
-    $sql = "SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude
+    $sql = "SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, LOCAL.destaque
             FROM LOCAL JOIN CHECKIN ON LOCAL.ID_LOCAL = CHECKIN.ID_LOCAL
             WHERE CHECKIN.ID_USUARIO = :id_usuario
               AND CHECKIN.DT_CHECKOUT IS NULL";
