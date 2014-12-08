@@ -543,6 +543,27 @@ function adicionaCheckin()
 
                             //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 			}
+                        
+                        //Expira todos os likes dados pelo usuário
+
+                        $sql = "UPDATE LIKES SET dt_expiracao = NOW() WHERE id_usuario1 = :id_usuario AND dt_expiracao IS NULL";
+
+                        try{
+
+                                $stmt = $conn->prepare($sql);
+                                $stmt->bindParam("id_usuario",$checkin->id_usuario);
+                                $stmt->execute();
+
+                        } catch(PDOException $e){
+
+                            //ERRO 535
+                            //MENSAGEM: Erro ao expirar os likes do usuario
+
+                            header('Ed-Return-Message: Erro ao expirar os likes do usuario', true, 535);	
+                            echo '[]';
+
+                            die();
+                        }
 		}
 		// Se o ultimo checkin foi realizado há menos de 5 minutos, retorna mensagem de erro.
 		else{
@@ -560,7 +581,7 @@ function adicionaCheckin()
 			//$checkin->desc_output = "Checkin anterior em menos de 5 minutos.";
 		}
 	}
-	else{
+	else{ //Se o usuário não tem checkin vigente
 		$checkin->checkin_vigente = "0";
 	}
 	
