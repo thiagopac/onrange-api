@@ -9,9 +9,10 @@ $app->get('/', function () { echo "{\"Erro\":\"diretório raiz\"}"; }); //erro n
 $app->get('/local/listatodoslocais','listaTodosLocais'); //traz todos locais
 $app->get('/local/listaLocaisRange/:latitude_atual/:longitude_atual/:range/:order_by','listaLocaisRange'); //traz os locais dentro do range definido pelo usuário, baseando-se no local atual
 $app->get('/checkin/listaUsuariosCheckin/:id_local/:sexo/:id_usuario','listaUsuariosCheckin'); //traz os usuários com checkin corrente no local informado
-$app->get('/checkin/verificaCheckinUsuario/:id_usuario','verificaCheckinUsuario'); //traz os usuários com checkin corrente no local informado
+$app->get('/checkin/verificaCheckinUsuario/:id_usuario','verificaCheckinUsuario'); //retorna o Local onde o usuaário possui checkin corrente
 $app->get('/match/listaMatches/:id_usuario','listaMatches'); //traz uma lista com todos os matches válidos do usuário informado
 $app->get('/promo/listaPromosUsuario/:id_usuario','listaPromosUsuario'); //traz uma lista com todos as promos do usuário informado
+$app->get('/promo/verificapromolocal/:id_local','verificaPromoLocal'); //retorna o id do promo referente ao Local, caso exista
 
 //POST METHODS
 $app->post('/local/adicionalocal','adicionaLocal'); //cria novo local
@@ -69,36 +70,36 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 	
 	//Verifica qual seleção deve ser aplicada, se por checkins ou por distância
 	if($order_by=="checkin"){
-		$sql = "SELECT id_local, nome, latitude, longitude, 
-					acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
-					qt_checkin, id_tipo_local AS tipo_local, destaque
-				FROM (
-						SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, LOCAL.destaque
-						FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
-						WHERE
-						CHECKINS_CORRENTES.qt_checkin > 0
-						AND LOCAL.dt_exclusao IS NULL
-						AND LOCAL.latitude BETWEEN :minLat AND :maxLat
-						AND LOCAL.longitude Between :minLong AND :maxLong
-						GROUP BY LOCAL.id_local
-					) AS FirstCut 
-				WHERE acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 <= :range
-				ORDER BY qt_checkin DESC";
-	}else{
-		$sql = "SELECT id_local, nome, latitude, longitude, 
-					acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
-					qt_checkin, id_tipo_local AS tipo_local, destaque
-				FROM (
-						SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, LOCAL.destaque
-						FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
-						WHERE
-						LOCAL.dt_exclusao IS NULL
-						AND LOCAL.latitude BETWEEN :minLat AND :maxLat
-						AND LOCAL.longitude Between :minLong AND :maxLong
-						GROUP BY LOCAL.id_local
-					) AS FirstCut 
-				WHERE acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 <= :range
-				ORDER BY distancia ASC";
+            $sql = "SELECT id_local, nome, latitude, longitude, 
+                    acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
+                    qt_checkin, id_tipo_local AS tipo_local, destaque
+                    FROM (
+                        SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, LOCAL.destaque
+                        FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
+                        WHERE
+                        CHECKINS_CORRENTES.qt_checkin > 0
+                        AND LOCAL.dt_exclusao IS NULL
+                        AND LOCAL.latitude BETWEEN :minLat AND :maxLat
+                        AND LOCAL.longitude Between :minLong AND :maxLong
+                        GROUP BY LOCAL.id_local
+                        ) AS FirstCut 
+                    WHERE acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 <= :range
+                    ORDER BY qt_checkin DESC";
+        }else{
+            $sql = "SELECT id_local, nome, latitude, longitude, 
+                    acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
+                    qt_checkin, id_tipo_local AS tipo_local, destaque
+                    FROM (
+                        SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, LOCAL.destaque
+                        FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
+                        WHERE
+                        LOCAL.dt_exclusao IS NULL
+                        AND LOCAL.latitude BETWEEN :minLat AND :maxLat
+                        AND LOCAL.longitude Between :minLong AND :maxLong
+                        GROUP BY LOCAL.id_local
+                        ) AS FirstCut 
+                    WHERE acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 <= :range
+                    ORDER BY distancia ASC";
 	}
 
 	try{
@@ -1487,7 +1488,7 @@ function listaPromosUsuario($id_usuario)
         die();
     }
     
-    echo "{\"Promos\":" . json_encode($promos) . "}";
+    echo "{\"Promo\":" . json_encode($promos) . "}";
 
     $conn = null;
 }
@@ -1584,116 +1585,151 @@ function apagaPromoUsuario()
 
 function adicionaPromoCheckin()
 {
-	$request = \Slim\Slim::getInstance()->request();
-	$promo_usuario = json_decode($request->getBody());
-        
-	//Verifica se ainda há lote disponível para o promo
-			
-	$sql = "SELECT id_codigo_promo FROM PROMO_USUARIO_CODIGO"
-                . " WHERE id_promo = :id_promo AND dt_utilizacao IS NULL"
-                . " LIMIT 1";
-		
-	try{
-            $conn = getConn();
-            $stmt = $conn->prepare($sql);
-            $stmt->bindParam("id_promo",$promo_usuario->id_promo);
-            $stmt->execute();
-		
-	} catch(PDOException $e){
-		
-            //ERRO 550
-            //MENSAGEM: Erro ao verificar codigos de promo disponiveis
-            
-            header('Ed-Return-Message: Erro ao verificar codigos de promo disponiveis', true, 550);
-            echo '[]';
-                                
-            die();
-            
-            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-                
-	}	
-	
-	$codigo_disponivel = $stmt->fetch(PDO::FETCH_OBJ);
-	
-	if($codigo_disponivel){ //Se existe código disponível
-               
-            //Insere na tabela de promoções e usuários
-            
-            $sql = "INSERT INTO PROMO_USUARIO (id_usuario, id_codigo_promo) VALUES (:id_usuario, :id_codigo_promo)";
-            try{
-                    $conn = getConn();
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bindParam("id_usuario",$promo_usuario->id_usuario);
-                    $stmt->bindParam("id_codigo_promo",$codigo_disponivel->id_codigo_promo);
-                    $stmt->execute();
-                    $promo_usuario->id_promo_usuario = $conn->lastInsertId();
+    $request = \Slim\Slim::getInstance()->request();
+    $promo_usuario = json_decode($request->getBody());
 
-                    $promo_usuario->id_output = "1";
-                    $promo_usuario->desc_output = "Promo adicionado com sucesso.";
+    //Verifica se ainda há lote disponível para o promo
 
-            } catch(PDOException $e){
+    $sql = "SELECT id_codigo_promo FROM PROMO_USUARIO_CODIGO"
+            . " WHERE id_promo = :id_promo AND dt_utilizacao IS NULL"
+            . " LIMIT 1";
 
-                //ERRO 551
-                //MENSAGEM: Erro ao adicionar promo ao usuario
+    try{
+        $conn = getConn();
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam("id_promo",$promo_usuario->id_promo);
+        $stmt->execute();
 
-                header('Ed-Return-Message: Erro ao adicionar promo ao usuario', true, 551);
-                echo '[]';
+    } catch(PDOException $e){
 
-                die();
+        //ERRO 550
+        //MENSAGEM: Erro ao verificar codigos de promo disponiveis
 
-                //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-            }
-            
-            //Marca o código como utilizado
-            
-            $sql = "UPDATE PROMO_USUARIO_CODIGO SET dt_utilizacao = NOW() 
-                    WHERE id_codigo_promo = :id_codigo_promo";
+        header('Ed-Return-Message: Erro ao verificar codigos de promo disponiveis', true, 550);
+        echo '[]';
 
-            try{
+        die();
+
+        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+
+    }	
+
+    $codigo_disponivel = $stmt->fetch(PDO::FETCH_OBJ);
+
+    if($codigo_disponivel){ //Se existe código disponível
+
+        //Insere na tabela de promoções e usuários
+
+        $sql = "INSERT INTO PROMO_USUARIO (id_usuario, id_codigo_promo) VALUES (:id_usuario, :id_codigo_promo)";
+        try{
                 $conn = getConn();
                 $stmt = $conn->prepare($sql);
+                $stmt->bindParam("id_usuario",$promo_usuario->id_usuario);
                 $stmt->bindParam("id_codigo_promo",$codigo_disponivel->id_codigo_promo);
                 $stmt->execute();
+                $promo_usuario->id_promo_usuario = $conn->lastInsertId();
 
-            } catch(PDOException $e){
+                $promo_usuario->id_output = "1";
+                $promo_usuario->desc_output = "Promo adicionado com sucesso.";
 
-                //ERRO 553
-                //MENSAGEM: Erro ao marcar codigo como utilizado
+        } catch(PDOException $e){
 
-                header('Ed-Return-Message: Erro ao marcar codigo como utilizado', true, 553);	
-                echo '[]';
+            //ERRO 551
+            //MENSAGEM: Erro ao adicionar promo ao usuario
 
-                die();
-            }
-
-            if(!$stmt->rowCount()){
-
-                //ERRO 553
-                //MENSAGEM: Erro ao marcar codigo como utilizado
-
-                header('Ed-Return-Message: Erro ao marcar codigo como utilizado', true, 553);	
-                echo '[]';
-
-                die();
-            }
-        }
-        else{
-            
-            //ERRO 552
-            //MENSAGEM: Nao ha lote disponivel
-
-            header('Ed-Return-Message: Nao ha lote disponivel', true, 552);
+            header('Ed-Return-Message: Erro ao adicionar promo ao usuario', true, 551);
             echo '[]';
 
             die();
-            
+
+            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
         }
+
+        //Marca o código como utilizado
+
+        $sql = "UPDATE PROMO_USUARIO_CODIGO SET dt_utilizacao = NOW() 
+                WHERE id_codigo_promo = :id_codigo_promo";
+
+        try{
+            $conn = getConn();
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam("id_codigo_promo",$codigo_disponivel->id_codigo_promo);
+            $stmt->execute();
+
+        } catch(PDOException $e){
+
+            //ERRO 553
+            //MENSAGEM: Erro ao marcar codigo como utilizado
+
+            header('Ed-Return-Message: Erro ao marcar codigo como utilizado', true, 553);	
+            echo '[]';
+
+            die();
+        }
+
+        if(!$stmt->rowCount()){
+
+            //ERRO 553
+            //MENSAGEM: Erro ao marcar codigo como utilizado
+
+            header('Ed-Return-Message: Erro ao marcar codigo como utilizado', true, 553);	
+            echo '[]';
+
+            die();
+        }
+    }
+    else{
+
+        //ERRO 552
+        //MENSAGEM: Nao ha lote disponivel
+
+        header('Ed-Return-Message: Nao ha lote disponivel', true, 552);
+        echo '[]';
+
+        die();
+
+    }
+
+
+    // Retorna o objeto do Promo criado
+
+    echo "{\"Promo\":" . json_encode($promo_usuario) . "}";
+
+    $conn = null;
 	
-	
-	// Retorna o objeto do Promo criado
-	
-	echo "{\"Promo\":" . json_encode($promo_usuario) . "}";
-	
-	$conn = null;
+}
+
+function verificaPromoLocal($id_local)
+{
+    $sql = "SELECT PROMO.id_promo
+            FROM PROMO
+            WHERE PROMO.id_local = :id_local
+              AND NOW() BETWEEN dt_inicio AND dt_fim
+              AND promo_checkin = 1";
+    try{
+        $conn = getConn();
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam("id_local",$id_local);
+        $stmt->execute();
+
+        $promo = $stmt->fetch(PDO::FETCH_OBJ);
+        
+    } catch(PDOException $e){
+        //ERRO 554
+        //MENSAGEM: Erro ao verificar promo
+
+        header('Ed-Return-Message: Erro ao verificar promo', true, 554);	
+        echo '[]';
+
+        die();
+    }
+
+    if(!$promo){
+        echo "{\"Promo\":{\"id_promo\":\"0\"}}";
+    }else{
+        echo "{\"Promo\":" . json_encode($promo) . "}";
+    }
+
+    $conn = null;
 	
 }
