@@ -1701,7 +1701,7 @@ function adicionaPromoCheckin()
 
 function verificaPromoLocal($id_local)
 {
-    $sql = "SELECT PROMO.id_promo
+    $sql = "SELECT id_promo, nome, descricao 
             FROM PROMO
             WHERE PROMO.id_local = :id_local
               AND NOW() BETWEEN dt_inicio AND dt_fim
