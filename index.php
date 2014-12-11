@@ -1488,7 +1488,7 @@ function listaPromosUsuario($id_usuario)
         die();
     }
     
-    echo "{\"Promo\":" . json_encode($promos) . "}";
+    echo "{\"Promos\":" . json_encode($promos) . "}";
 
     $conn = null;
 }
