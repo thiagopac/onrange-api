@@ -1758,9 +1758,9 @@ function verificaPromosNaoLidos($id_usuario)
     }
 
     if($naolidos){
-        echo "{\"Promo\":{\"NaoLido\":\"1\"}}";
+        echo "{\"Promo\":{\"nao_lido\":\"1\"}}";
     }else{        
-        echo "{\"Promo\":{\"NaoLido\":\"0\"}}";
+        echo "{\"Promo\":{\"nao_lido\":\"0\"}}";
     }
 
     $conn = null;
