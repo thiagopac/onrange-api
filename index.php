@@ -13,6 +13,7 @@ $app->get('/checkin/verificaCheckinUsuario/:id_usuario','verificaCheckinUsuario'
 $app->get('/match/listaMatches/:id_usuario','listaMatches'); //traz uma lista com todos os matches válidos do usuário informado
 $app->get('/promo/listaPromosUsuario/:id_usuario','listaPromosUsuario'); //traz uma lista com todos as promos do usuário informado
 $app->get('/promo/verificapromolocal/:id_local','verificaPromoLocal'); //retorna o id do promo referente ao Local, caso exista
+$app->get('/promo/verificapromosnaolidos/:id_usuario','verificaPromosNaoLidos'); //retorna 1 caso haja promos nao lidos na caixa de entrada, caso contrario retorna 0
 
 //POST METHODS
 $app->post('/local/adicionalocal','adicionaLocal'); //cria novo local
@@ -1726,6 +1727,39 @@ function verificaPromoLocal($id_local)
         echo "{\"Promo\":{\"id_promo\":\"0\"}}";
     }else{
         echo "{\"Promo\":" . json_encode($promo) . "}";
+    }
+
+    $conn = null;
+	
+}
+
+function verificaPromosNaoLidos($id_usuario)
+{
+    $sql = "SELECT 1 from PROMO_USUARIO "
+            . "WHERE id_usuario = :id_usuario "
+            . "AND dt_visualizacao IS NULL";
+    try{
+        $conn = getConn();
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam("id_usuario",$id_usuario);
+        $stmt->execute();
+
+        $naolidos = $stmt->fetch(PDO::FETCH_OBJ);
+        
+    } catch(PDOException $e){
+        //ERRO 555
+        //MENSAGEM: Erro ao verificar promos
+
+        header('Ed-Return-Message: Erro ao verificar promos', true, 555);	
+        echo '[]';
+
+        die();
+    }
+
+    if($naolidos){
+        echo "{\"PromosNaoLidos\":{\"PromosNaoLidos\":\"1\"}}";
+    }else{        
+        echo "{\"PromosNaoLidos\":{\"PromosNaoLidos\":\"0\"}}";
     }
 
     $conn = null;
