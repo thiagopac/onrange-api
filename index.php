@@ -1499,14 +1499,12 @@ function marcaPromoVisualizado()
     $promo = json_decode($request->getBody());
 
     $sql = "UPDATE PROMO_USUARIO SET dt_visualizacao = NOW() 
-            WHERE id_codigo_promo = :id_codigo_promo
-              AND id_usuario = :id_usuario";
+            WHERE id_codigo_promo = :id_codigo_promo";
 
     try{
         $conn = getConn();
         $stmt = $conn->prepare($sql);
         $stmt->bindParam("id_codigo_promo",$promo->id_codigo_promo);
-        $stmt->bindParam("id_usuario",$promo->id_usuario);
         $stmt->execute();
 
     } catch(PDOException $e){
