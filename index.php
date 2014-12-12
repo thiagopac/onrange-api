@@ -1737,7 +1737,8 @@ function verificaPromosNaoLidos($id_usuario)
 {
     $sql = "SELECT 1 from PROMO_USUARIO "
             . "WHERE id_usuario = :id_usuario "
-            . "AND dt_visualizacao IS NULL";
+            . "AND dt_visualizacao IS NULL "
+            . "LIMIT 1";
     try{
         $conn = getConn();
         $stmt = $conn->prepare($sql);
@@ -1757,9 +1758,9 @@ function verificaPromosNaoLidos($id_usuario)
     }
 
     if($naolidos){
-        echo "{\"PromosNaoLidos\":{\"PromosNaoLidos\":\"1\"}}";
+        echo "{\"Promo\":{\"NaoLido\":\"1\"}}";
     }else{        
-        echo "{\"PromosNaoLidos\":{\"PromosNaoLidos\":\"0\"}}";
+        echo "{\"Promo\":{\"NaoLido\":\"0\"}}";
     }
 
     $conn = null;
