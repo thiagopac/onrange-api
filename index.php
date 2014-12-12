@@ -1462,7 +1462,7 @@ function apagaUsuario()
 function listaPromosUsuario($id_usuario)
 {
     $sql = "SELECT PROMO.id_promo, LOCAL.nome AS local, PROMO.nome, PROMO.descricao, PROMO.dt_inicio, PROMO.dt_fim, PROMO.lote, PROMO.dt_disponibilizacao, PROMO.dt_promo,
-            PROMO_USUARIO_CODIGO.codigo_promo, PROMO_USUARIO.dt_utilizacao, PROMO_USUARIO.dt_visualizacao
+            PROMO_USUARIO_CODIGO.codigo_promo, PROMO_USUARIO_CODIGO.id_codigo_promo, PROMO_USUARIO.dt_utilizacao, PROMO_USUARIO.dt_visualizacao
             FROM PROMO JOIN LOCAL ON PROMO.id_local = LOCAL.id_local
                        JOIN PROMO_USUARIO_CODIGO ON PROMO.id_promo = PROMO_USUARIO_CODIGO.id_promo
                        JOIN PROMO_USUARIO ON PROMO_USUARIO_CODIGO.id_codigo_promo = PROMO_USUARIO.id_codigo_promo
@@ -1499,13 +1499,13 @@ function marcaPromoVisualizado()
     $promo = json_decode($request->getBody());
 
     $sql = "UPDATE PROMO_USUARIO SET dt_visualizacao = NOW() 
-            WHERE id_promo = :id_promo
+            WHERE id_codigo_promo = :id_codigo_promo
               AND id_usuario = :id_usuario";
 
     try{
         $conn = getConn();
         $stmt = $conn->prepare($sql);
-        $stmt->bindParam("id_promo",$promo->id_promo);
+        $stmt->bindParam("id_codigo_promo",$promo->id_codigo_promo);
         $stmt->bindParam("id_usuario",$promo->id_usuario);
         $stmt->execute();
 
