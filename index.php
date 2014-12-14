@@ -137,96 +137,126 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 
 function adicionaLocal()
 {
-	$request = \Slim\Slim::getInstance()->request();
-	$local = json_decode($request->getBody());
-	$sql = "INSERT INTO LOCAL (nome, latitude, longitude, dt_local, id_usuario, id_tipo_local) VALUES (:nome_local, :latitude_local, :longitude_local, NOW(), :id_usuario, :id_tipo_local)";
-	try{
-		$conn = getConn();
-		$stmt = $conn->prepare($sql);
-		$stmt->bindParam("nome_local",$local->nome);
-		$stmt->bindParam("latitude_local",$local->latitude);
-		$stmt->bindParam("longitude_local",$local->longitude);
-		$stmt->bindParam("id_usuario",$local->id_usuario);
-		$stmt->bindParam("id_tipo_local",$local->tipo_local);
-		$stmt->execute();
-		$local->id_local = $conn->lastInsertId();
-		
-		$local->id_output = "1";
-		$local->desc_output = "Local adicionado com sucesso.";
-		
-	} catch(PDOException $e){
-		
+    $request = \Slim\Slim::getInstance()->request();
+    $local = json_decode($request->getBody());
+
+    //Verifica se o usuário inseriu um local dentro do tempo mínimo definido nas configurações
+
+    $sql = "SELECT TIME_TO_SEC(TIMEDIFF(NOW(),dt_local))/60 as minutos_ultimo_local FROM LOCAL WHERE id_usuario = :id_usuario ORDER BY dt_local DESC LIMIT 1";
+    try{
+            $conn = getConn();
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam("id_usuario",$local->id_usuario);
+            $stmt->execute();
+    } catch(PDOException $e){
+
+        //ERRO 557
+        //MENSAGEM: Erro ao buscar ultimo local criado pelo usuario
+
+        header('Ed-Return-Message: Erro ao buscar ultimo local criado pelo usuario', true, 557);
+        echo '[]';
+
+        die();
+
+        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+    }
+
+    $ultimo_local = $stmt->fetch(PDO::FETCH_OBJ);
+
+    if($ultimo_local->minutos_ultimo_local > $app->t_local){ //Se o ultimo local criado pelo usuario foi criado fora do tempo mínimo nas configurações
+
+
+        //Insere o novo local
+
+        $sql = "INSERT INTO LOCAL (nome, latitude, longitude, dt_local, id_usuario, id_tipo_local) VALUES (:nome_local, :latitude_local, :longitude_local, NOW(), :id_usuario, :id_tipo_local)";
+        try{
+                $conn = getConn();
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam("nome_local",$local->nome);
+                $stmt->bindParam("latitude_local",$local->latitude);
+                $stmt->bindParam("longitude_local",$local->longitude);
+                $stmt->bindParam("id_usuario",$local->id_usuario);
+                $stmt->bindParam("id_tipo_local",$local->tipo_local);
+                $stmt->execute();
+                $local->id_local = $conn->lastInsertId();
+
+                $local->id_output = "1";
+                $local->desc_output = "Local adicionado com sucesso.";
+
+        } catch(PDOException $e){
+
             //ERRO 503
             //MENSAGEM: Erro ao adicionar novo local
-            
+
             header('Ed-Return-Message: Erro ao adicionar novo local', true, 503);
             echo '[]';
-                                
-            die();
             
             //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-	}
-	
-	//Cria o local na tabela de controle de checkins correntes
-	
-	$sql = "INSERT INTO CHECKINS_CORRENTES (id_local) VALUES (:id_local)";
-	try{
-		$stmt = $conn->prepare($sql);
-		$stmt->bindParam("id_local",$local->id_local);
-		$stmt->execute();
 
-	} catch(PDOException $e){
-		
+            die();
+
+        }
+
+        //Cria o local na tabela de controle de checkins correntes
+
+        $sql = "INSERT INTO CHECKINS_CORRENTES (id_local) VALUES (:id_local)";
+        try{
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam("id_local",$local->id_local);
+                $stmt->execute();
+
+        } catch(PDOException $e){
+
             //ERRO 504
             //MENSAGEM: Erro ao adicionar novo local em checkins correntes
-            
+
             header('Ed-Return-Message: Erro ao adicionar novo local em checkins correntes', true, 504);
             echo '[]';
-                                
+
             die();
-            
+
             //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-                
-	}
-	
-	//Checkout no local anterior
-	
-	//Verifica se há checkin corrente
-			
-	$sql = "SELECT id_checkin, id_local FROM CHECKIN WHERE id_usuario = :id_usuario AND dt_checkout IS NULL";
-		
-	try{
-		$conn = getConn();
-		$stmt = $conn->prepare($sql);
-		$stmt->bindParam("id_usuario",$local->id_usuario);
-		$stmt->execute();
-		
-	} catch(PDOException $e){
-		
+
+        }
+
+        //Checkout no local anterior
+
+        //Verifica se há checkin corrente
+
+        $sql = "SELECT id_checkin, id_local FROM CHECKIN WHERE id_usuario = :id_usuario AND dt_checkout IS NULL";
+
+        try{
+                $conn = getConn();
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam("id_usuario",$local->id_usuario);
+                $stmt->execute();
+
+        } catch(PDOException $e){
+
             //ERRO 505
             //MENSAGEM: Erro ao verificar checkin corrente do usuario
-            
+
             header('Ed-Return-Message: Erro ao verificar checkin corrente do usuario', true, 505);
             echo '[]';
-                                
+
             die();
-            
+
             //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-                
-	}	
-	
-	$checkin = $stmt->fetch(PDO::FETCH_OBJ);
-	
-	if($checkin){ //Se existe checkin prévio, faz o checkout
-	
-		$sql = "UPDATE CHECKIN SET dt_checkout = NOW() WHERE id_checkin = :id_checkin";
-		
-		try{
-			$stmt = $conn->prepare($sql);
-			$stmt->bindParam("id_checkin",$checkin->id_checkin);
-			$stmt->execute();
-			
-		} catch(PDOException $e){
+
+        }	
+
+        $checkin = $stmt->fetch(PDO::FETCH_OBJ);
+
+        if($checkin){ //Se existe checkin prévio, faz o checkout
+
+                $sql = "UPDATE CHECKIN SET dt_checkout = NOW() WHERE id_checkin = :id_checkin";
+
+                try{
+                        $stmt = $conn->prepare($sql);
+                        $stmt->bindParam("id_checkin",$checkin->id_checkin);
+                        $stmt->execute();
+
+                } catch(PDOException $e){
                     //ERRO 519
                     //MENSAGEM: Erro ao realizar checkout no local anterior
 
@@ -236,20 +266,20 @@ function adicionaLocal()
                     die();
 
                     //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-		}
-		
-		//Atualiza a tabela de checkins correntes, decrementando 1 do local anterior
-				
-		$sql = "UPDATE CHECKINS_CORRENTES SET qt_checkin = qt_checkin - 1 WHERE id_local = :id_local";
-		
-		try{
-	
-			$stmt = $conn->prepare($sql);
-			$stmt->bindParam("id_local",$checkin->id_local);
-			$stmt->execute();
-		
-		} catch(PDOException $e){
-			
+                }
+
+                //Atualiza a tabela de checkins correntes, decrementando 1 do local anterior
+
+                $sql = "UPDATE CHECKINS_CORRENTES SET qt_checkin = qt_checkin - 1 WHERE id_local = :id_local";
+
+                try{
+
+                        $stmt = $conn->prepare($sql);
+                        $stmt->bindParam("id_local",$checkin->id_local);
+                        $stmt->execute();
+
+                } catch(PDOException $e){
+
                     //ERRO 506
                     //MENSAGEM: Erro ao decrementar tabela de checkins correntes
 
@@ -259,21 +289,21 @@ function adicionaLocal()
                     die();
 
                     //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-		}
-	
-	}
-	
-	// Faz o checkin no local criado
-	$sql = "INSERT INTO CHECKIN (id_usuario, id_local, dt_checkin) VALUES (:id_usuario, :id_local, NOW())";
-	
-	try{
-		$stmt = $conn->prepare($sql);
-		$stmt->bindParam("id_usuario",$local->id_usuario);
-		$stmt->bindParam("id_local",$local->id_local);
-		$stmt->execute();
+                }
 
-	} catch(PDOException $e){
-	
+        }
+
+        // Faz o checkin no local criado
+        $sql = "INSERT INTO CHECKIN (id_usuario, id_local, dt_checkin) VALUES (:id_usuario, :id_local, NOW())";
+
+        try{
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam("id_usuario",$local->id_usuario);
+                $stmt->bindParam("id_local",$local->id_local);
+                $stmt->execute();
+
+        } catch(PDOException $e){
+
             //ERRO 507
             //MENSAGEM: Erro ao fazer checkin no local criado
 
@@ -283,17 +313,17 @@ function adicionaLocal()
             die();
 
             //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-	}
-	
-	// Atualiza tabela de checkins correntes, incrementando 1 ao local novo
-	
-	$sql = "UPDATE CHECKINS_CORRENTES SET qt_checkin = qt_checkin + 1 WHERE id_local = :id_local";
-	try{
-	$stmt = $conn->prepare($sql);
-	$stmt->bindParam("id_local",$local->id_local);
-	$stmt->execute();
-	} catch(PDOException $e){
-            
+        }
+
+        // Atualiza tabela de checkins correntes, incrementando 1 ao local novo
+
+        $sql = "UPDATE CHECKINS_CORRENTES SET qt_checkin = qt_checkin + 1 WHERE id_local = :id_local";
+        try{
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam("id_local",$local->id_local);
+        $stmt->execute();
+        } catch(PDOException $e){
+
             //ERRO 520
             //MENSAGEM: Erro ao incrementar tabela de checkins correntes
 
@@ -303,13 +333,23 @@ function adicionaLocal()
             die();
 
             //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-	}
-	
-	// Retorna o objeto do Local criado
-	
-	echo "{\"Local\":" . json_encode($local) . "}";
-	
-	$conn = null;
+        }
+
+        // Retorna o objeto do Local criado
+
+        echo "{\"Local\":" . json_encode($local) . "}";
+    }
+    else{
+        //ERRO 558
+        //MENSAGEM: Ultimo local criado abaixo do tempo minimo
+
+        header('Ed-Return-Message: Ultimo local criado abaixo do tempo minimo', true, 558);
+        echo '[]';
+
+        die();
+    }
+
+    $conn = null;
 	
 }
 
@@ -505,9 +545,9 @@ function adicionaCheckin()
 		$checkin->id_checkin_anterior = $checkin_vigente->id_checkin;
 		$checkin->id_local_anterior = $checkin_vigente->id_local;
 	
-		// Verifica se o último checkin foi realizado há menos de 5 minutos.
+		// Verifica se o último checkin foi realizado fora do tempo mínimo (valor setado na variavel global).
 		
-		if($checkin_vigente->minutos_ultimo_checkin > 0){		
+		if($checkin_vigente->minutos_ultimo_checkin > $app->t_checkin){		
 		
 			// Faz o checkout no local anterior
 			
