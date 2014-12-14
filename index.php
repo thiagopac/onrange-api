@@ -14,6 +14,7 @@ $app->get('/match/listaMatches/:id_usuario','listaMatches'); //traz uma lista co
 $app->get('/promo/listaPromosUsuario/:id_usuario','listaPromosUsuario'); //traz uma lista com todos as promos do usuário informado
 $app->get('/promo/verificapromolocal/:id_local','verificaPromoLocal'); //retorna o id do promo referente ao Local, caso exista
 $app->get('/promo/verificapromosnaolidos/:id_usuario','verificaPromosNaoLidos'); //retorna 1 caso haja promos nao lidos na caixa de entrada, caso contrario retorna 0
+$app->get('/configuracao/verificaconfiguracoes','verificaConfiguracoes'); //seta variaveis globais com configuracoes a serem usadas pelo app
 
 //POST METHODS
 $app->post('/local/adicionalocal','adicionaLocal'); //cria novo local
@@ -577,10 +578,6 @@ function adicionaCheckin()
 
                         die();
 
-                        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-                                        
-                        //$checkin->id_output = "3";
-			//$checkin->desc_output = "Checkin anterior em menos de 5 minutos.";
 		}
 	}
 	else{ //Se o usuário não tem checkin vigente
@@ -1762,6 +1759,33 @@ function verificaPromosNaoLidos($id_usuario)
     }else{        
         echo "{\"Promo\":{\"nao_lido\":\"0\"}}";
     }
+
+    $conn = null;
+	
+}
+
+function verificaConfiguracoes()
+{
+    $sql = "SELECT t_checkin, t_local from CONFIGURACAO";
+    try{
+        $conn = getConn();
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+
+        $configuracoes = $stmt->fetch(PDO::FETCH_OBJ);
+        
+    } catch(PDOException $e){
+        //ERRO 556
+        //MENSAGEM: Erro ao verificar configuracoes
+
+        header('Ed-Return-Message: Erro ao verificar configuracoes', true, 556);	
+        echo '[]';
+
+        die();
+    }
+
+    $app->t_checkin = $configuracoes->t_checkin;
+    $app->t_local = $configuracoes->t_local;
 
     $conn = null;
 	
