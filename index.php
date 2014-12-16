@@ -162,8 +162,10 @@ function adicionaLocal()
     }
 
     $ultimo_local = $stmt->fetch(PDO::FETCH_OBJ);
+    
+    $configuracoes = verificaConfiguracoes();
 
-    if($ultimo_local->minutos_ultimo_local > $app->t_local){ //Se o ultimo local criado pelo usuario foi criado fora do tempo mínimo nas configurações
+    if($ultimo_local->minutos_ultimo_local > $configuracoes->t_local){ //Se o ultimo local criado pelo usuario foi criado fora do tempo mínimo nas configurações
 
 
         //Insere o novo local
@@ -547,7 +549,9 @@ function adicionaCheckin()
 	
 		// Verifica se o último checkin foi realizado fora do tempo mínimo (valor setado na variavel global).
 		
-		if($checkin_vigente->minutos_ultimo_checkin > $app->t_checkin){		
+		$configuracoes = verificaConfiguracoes();
+                
+                if($checkin_vigente->minutos_ultimo_checkin > $configuracoes->t_checkin){		
 		
 			// Faz o checkout no local anterior
 			
@@ -672,6 +676,8 @@ function adicionaCheckin()
 
 	$checkin->id_output = "1";
 	$checkin->desc_output = "Checkin realizado com sucesso.";
+        
+        $checkin->t_checkin = $app->t_checkin;
 	
 	echo "{\"Checkin\":" . json_encode($checkin) . "}";
 	
@@ -937,104 +943,92 @@ function adicionaLike()
 
 function loginUsuario()
 {
-    if(verificaConfiguracoes){ //Seta as variáveis globais
-    
-        $request = \Slim\Slim::getInstance()->request();
-        $usuario = json_decode($request->getBody());
+    $request = \Slim\Slim::getInstance()->request();
+    $usuario = json_decode($request->getBody());
 
-        //Verifica e devolve seus dados
+    //Verifica e devolve seus dados
 
-        $sql = "SELECT USUARIO.id_usuario, USUARIO.id_facebook AS facebook_usuario, USUARIO.id_qb AS quickblox_usuario, USUARIO.nome AS nome_usuario, USUARIO.sexo AS sexo_usuario, USUARIO.dt_usuario, USUARIO.dt_exclusao, USUARIO.dt_bloqueio, USUARIO.email AS email_usuario 
-                FROM USUARIO WHERE USUARIO.id_facebook = :id_facebook";
-        try{
-            $conn = getConn();
-            $stmt = $conn->prepare($sql);
-            $stmt->bindParam("id_facebook",$usuario->facebook_usuario);
-            $stmt->execute();
+    $sql = "SELECT USUARIO.id_usuario, USUARIO.id_facebook AS facebook_usuario, USUARIO.id_qb AS quickblox_usuario, USUARIO.nome AS nome_usuario, USUARIO.sexo AS sexo_usuario, USUARIO.dt_usuario, USUARIO.dt_exclusao, USUARIO.dt_bloqueio, USUARIO.email AS email_usuario 
+            FROM USUARIO WHERE USUARIO.id_facebook = :id_facebook";
+    try{
+        $conn = getConn();
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam("id_facebook",$usuario->facebook_usuario);
+        $stmt->execute();
 
-            $usuario = $stmt->fetch(PDO::FETCH_OBJ);
+        $usuario = $stmt->fetch(PDO::FETCH_OBJ);
 
-        } catch(PDOException $e){
+    } catch(PDOException $e){
 
-            //ERRO 530
-            //MENSAGEM: Erro ao buscar usuario
+        //ERRO 530
+        //MENSAGEM: Erro ao buscar usuario
 
-            header('Ed-Return-Message: Erro ao buscar usuario', true, 530);	
-            echo '[]';
-
-            die();
-        }
-
-        //Se o usuário foi encontrado
-        if($usuario){
-
-            //Verificando se usuario foi bloqueado logicamente através do preenchimento do campo DT_BLOQUEIO
-            if($usuario->dt_bloqueio != null){
-
-                //ERRO 501
-                //MENSAGEM: Usuario bloqueado
-
-                header('Ed-Return-Message: Usuario bloqueado', true, 501);	
-                echo '[]';
-
-                die();	
-
-            } 
-            else{
-                if($usuario->dt_exclusao != null){ //Verificando se usuario foi excluído logicamente através do preenchimento do campo DT_EXCLUSAO
-
-                    //Seta NULL no campo DT_EXCLUSAO, pois o usuario deseja retornar ao aplicativo
-
-                    $sql = "UPDATE USUARIO SET dt_exclusao = NULL 
-                    WHERE id_usuario = :id_usuario";
-
-                    try{
-                            $stmt = $conn->prepare($sql);
-                            $stmt->bindParam("id_usuario",$usuario->id_usuario);
-                            $stmt->execute();
-
-                    } catch(PDOException $e){
-
-                        //ERRO 546
-                        //MENSAGEM: Erro ao remover data de exclusao do usuario
-
-                        header('Ed-Return-Message: Erro ao remover data de exclusao do usuario', true, 546);	
-                        echo '[]';
-
-                        die();
-                    }
-                }
-
-                //Login realizado com sucesso. Retorna o objeto com os dados do usuário
-
-                echo "{\"Usuario\":" . json_encode($usuario) . "}";
-
-            }
-
-        }
-        else{
-
-            //ERRO 500
-            //MENSAGEM: Usuario inexistente
-
-            header('Ed-Return-Message: Usuario inexistente', true, 500);	
-            echo '[]';
-
-            die();
-
-        }
-
-        $conn = null;
-    }
-    else{
-        //ERRO 559
-        //MENSAGEM: Erro ao definir variaveis globais de configuracao
-
-        header('Ed-Return-Message: Erro ao definir variaveis globais de configuracao', true, 559);	
+        header('Ed-Return-Message: Erro ao buscar usuario', true, 530);	
         echo '[]';
 
         die();
     }
+
+    //Se o usuário foi encontrado
+    if($usuario){
+
+        //Verificando se usuario foi bloqueado logicamente através do preenchimento do campo DT_BLOQUEIO
+        if($usuario->dt_bloqueio != null){
+
+            //ERRO 501
+            //MENSAGEM: Usuario bloqueado
+
+            header('Ed-Return-Message: Usuario bloqueado', true, 501);	
+            echo '[]';
+
+            die();	
+
+        } 
+        else{
+            if($usuario->dt_exclusao != null){ //Verificando se usuario foi excluído logicamente através do preenchimento do campo DT_EXCLUSAO
+
+                //Seta NULL no campo DT_EXCLUSAO, pois o usuario deseja retornar ao aplicativo
+
+                $sql = "UPDATE USUARIO SET dt_exclusao = NULL 
+                WHERE id_usuario = :id_usuario";
+
+                try{
+                        $stmt = $conn->prepare($sql);
+                        $stmt->bindParam("id_usuario",$usuario->id_usuario);
+                        $stmt->execute();
+
+                } catch(PDOException $e){
+
+                    //ERRO 546
+                    //MENSAGEM: Erro ao remover data de exclusao do usuario
+
+                    header('Ed-Return-Message: Erro ao remover data de exclusao do usuario', true, 546);	
+                    echo '[]';
+
+                    die();
+                }
+            }
+
+            //Login realizado com sucesso. Retorna o objeto com os dados do usuário
+
+            echo "{\"Usuario\":" . json_encode($usuario) . "}";
+
+        }
+
+    }
+    else{
+
+        //ERRO 500
+        //MENSAGEM: Usuario inexistente
+
+        header('Ed-Return-Message: Usuario inexistente', true, 500);	
+        echo '[]';
+
+        die();
+
+    }
+
+    $conn = null;
 }
 
 function listaUsuariosCheckin($id_local,$sexo,$id_usuario)
@@ -1826,9 +1820,6 @@ function verificaConfiguracoes()
 
         $configuracoes = $stmt->fetch(PDO::FETCH_OBJ);
         
-        $app->t_checkin = $configuracoes->t_checkin;
-        $app->t_local = $configuracoes->t_local;
-        
     } catch(PDOException $e){
         //ERRO 556
         //MENSAGEM: Erro ao verificar configuracoes
@@ -1841,6 +1832,6 @@ function verificaConfiguracoes()
     
     $conn = null;
     
-    return true;
+    return $configuracoes;
 	
 }
