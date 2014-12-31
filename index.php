@@ -50,12 +50,12 @@ function listaTodosLocais()
 		$stmt = $conn->query($sql);
 		$locais = $stmt->fetchAll(PDO::FETCH_OBJ);
 		
-		echo "{\"Locais\":" . json_encode($locais) . "}";
+		echo json_encode($locais);
 		
 		$conn = null;
 		
 	} catch(PDOException $e){
-        echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+        echo '{"descricao":"'. $e->getMessage() .'"}';
 		die();
     }
 }
@@ -116,7 +116,7 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 		$stmt->bindParam("maxLong",$maxLong);
 		$stmt->execute();
 		$locais = $stmt->fetchAll(PDO::FETCH_OBJ);
-		echo "{\"Locais\":" . json_encode($locais) . "}";
+		echo json_encode($locais);
 		
 		$conn = null;
 		
@@ -339,7 +339,7 @@ function adicionaLocal()
 
         // Retorna o objeto do Local criado
 
-        echo "{\"Local\":" . json_encode($local) . "}";
+        echo json_encode($local);
     }
     else{
         //ERRO 558
@@ -507,7 +507,7 @@ function adicionaUsuario()
 	
 	}
 	
-	echo "{\"Usuario\":" . json_encode($usuario) . "}";
+	echo json_encode($usuario);
 	
 	$conn = null;
 }
@@ -679,7 +679,7 @@ function adicionaCheckin()
         
         $checkin->t_checkin = $app->t_checkin;
 	
-	echo "{\"Checkin\":" . json_encode($checkin) . "}";
+	echo json_encode($checkin);
 	
 	$conn = null;
 	
@@ -934,7 +934,7 @@ function adicionaLike()
 
         }
 
-        echo "{\"Like\":" . json_encode($like) . "}";
+        echo json_encode($like);
        
     }	
     
@@ -1011,7 +1011,7 @@ function loginUsuario()
 
             //Login realizado com sucesso. Retorna o objeto com os dados do usuário
 
-            echo "{\"Usuario\":" . json_encode($usuario) . "}";
+            echo json_encode($usuario);
 
         }
 
@@ -1090,7 +1090,7 @@ function listaUsuariosCheckin($id_local,$sexo,$id_usuario)
         $stmt->execute();
         $usuarios = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-        echo "{ \"Usuarios\": " . json_encode($usuarios) . " }";
+        echo json_encode($usuarios);
 
         $conn = null;
 
@@ -1196,7 +1196,7 @@ function fazCheckout()
             die();
         }
 
-        echo "{\"Checkout\":{\"id_output\":\"1\",\"desc_output\":\"Checkout realizado.\"}}";		
+        echo "{\"id_output\":\"1\",\"desc_output\":\"Checkout realizado.\"}";		
     }
     else{
         //ERRO 536
@@ -1236,7 +1236,7 @@ function verificaCheckinUsuario($id_usuario)
     }
 
     if(!$local){
-        echo "{\"Local\":{\"id_local\":\"0\",\"nome\":\"0\"}}";
+        echo "{\"id_local\":\"0\",\"nome\":\"0\"}";
     }else{
         
         try{
@@ -1262,7 +1262,7 @@ function verificaCheckinUsuario($id_usuario)
 
         $local->qt_checkin = $qt_checkin->qt_checkin;
 
-        echo "{\"Local\":" . json_encode($local) . "}";
+        echo json_encode($local);
     }
 
     $conn = null;
@@ -1301,7 +1301,7 @@ function listaMatches($id_usuario)
         die();
     }
     
-    echo "{\"Matches\":" . json_encode($matches) . "}";
+    echo json_encode($matches);
 
     $conn = null;
 }
@@ -1394,7 +1394,7 @@ function unMatch()
     $unmatch->id_output = 1;
     $unmatch->desc_output = "Descombinação realizada.";
     
-    echo "{\"Match\":" . json_encode($unmatch) . "}";
+    echo json_encode($unmatch);
     
     $conn = null;
 }
@@ -1487,7 +1487,7 @@ function apagaUsuario()
     
     if($stmt->rowCount()){
     
-        echo "{\"Usuario\":{\"id_output\":\"1\",\"desc_output\":\"Usuario apagado.\"}}";
+        echo "{\"id_output\":\"1\",\"desc_output\":\"Usuario apagado.\"}";
     
     }
     else{
@@ -1532,7 +1532,7 @@ function listaPromosUsuario($id_usuario)
         die();
     }
     
-    echo "{\"Promos\":" . json_encode($promos) . "}";
+    echo json_encode($promos);
 
     $conn = null;
 }
@@ -1564,7 +1564,7 @@ function marcaPromoVisualizado()
     
     if($stmt->rowCount()){
     
-        echo "{\"Promo\":{\"id_output\":\"1\",\"desc_output\":\"Promo marcado como visualizado.\"}}";
+        echo "{\"id_output\":\"1\",\"desc_output\":\"Promo marcado como visualizado.\"}";
     
     }
     else{
@@ -1609,7 +1609,7 @@ function apagaPromoUsuario()
     
     if($stmt->rowCount()){
     
-        echo "{\"Promo\":{\"id_output\":\"1\",\"desc_output\":\"Promo apagado com sucesso.\"}}";
+        echo "{\"id_output\":\"1\",\"desc_output\":\"Promo apagado com sucesso.\"}";
     
     }
     else{
@@ -1735,7 +1735,7 @@ function adicionaPromoCheckin()
 
     // Retorna o objeto do Promo criado
 
-    echo "{\"Promo\":" . json_encode($promo_usuario) . "}";
+    echo json_encode($promo_usuario);
 
     $conn = null;
 	
@@ -1767,9 +1767,9 @@ function verificaPromoLocal($id_local)
     }
 
     if(!$promo){
-        echo "{\"Promo\":{\"id_promo\":\"0\"}}";
+        echo "{\"id_promo\":\"0\"}";
     }else{
-        echo "{\"Promo\":" . json_encode($promo) . "}";
+        echo json_encode($promo);
     }
 
     $conn = null;
@@ -1801,9 +1801,9 @@ function verificaPromosNaoLidos($id_usuario)
     }
 
     if($naolidos){
-        echo "{\"Promo\":{\"nao_lido\":\"1\"}}";
+        echo "{\"nao_lido\":\"1\"}";
     }else{        
-        echo "{\"Promo\":{\"nao_lido\":\"0\"}}";
+        echo "{\"nao_lido\":\"0\"}";
     }
 
     $conn = null;
