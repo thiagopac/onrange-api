@@ -438,7 +438,7 @@ function adicionaUsuario()
 
                     //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 		}
-		
+//		
 		$usuario->id_usuario = $conn->lastInsertId();
 		$usuario->novo_usuario = "1";
 		
