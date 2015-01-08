@@ -422,22 +422,22 @@ function adicionaUsuario()
 		
 		$tags = "sexo-" . $usuario->sexo_usuario . ",localizacao-" . $usuario->localizacao_usuario . ",aniversario-" . $usuario->aniversario_usuario;
 		
-		$dados_usuario = array("login" => $usuario->facebook_usuario, "password" => $usuario->facebook_usuario, "email" => $usuario->email_usuario, "facebook_id" => $usuario->facebook_usuario, "tag_list" => $tags);
+//		$dados_usuario = array("login" => $usuario->facebook_usuario, "password" => $usuario->facebook_usuario, "email" => $usuario->email_usuario, "facebook_id" => $usuario->facebook_usuario, "tag_list" => $tags);
 		
-		try{
-			$usuario->QB = CallAPIQB("POST","http://api.quickblox.com/users.json",$dados_usuario,"QB-Token: " . $usuario->qbtoken);
-		} catch(PDOException $e){
-		
-                    //ERRO 510
-                    //MENSAGEM: Erro ao criar usuario no QB
-
-                    header('Ed-Return-Message: Erro ao criar usuario no QB', true, 510);
-                    echo '[]';
-
-                    die();
-
-                    //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-		}
+//		try{
+//			$usuario->QB = CallAPIQB("POST","http://api.quickblox.com/users.json",$dados_usuario,"QB-Token: " . $usuario->qbtoken);
+//		} catch(PDOException $e){
+//		
+//                    //ERRO 510
+//                    //MENSAGEM: Erro ao criar usuario no QB
+//
+//                    header('Ed-Return-Message: Erro ao criar usuario no QB', true, 510);
+//                    echo '[]';
+//
+//                    die();
+//
+//                    //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+//		}
 		
 		$usuario->id_usuario = $conn->lastInsertId();
 		$usuario->novo_usuario = "1";
@@ -481,22 +481,22 @@ function adicionaUsuario()
 		
 			$tags = "sexo-" . $usuario->sexo_usuario . ",localizacao-" . $usuario->localizacao_usuario . ",aniversario-" . $usuario->aniversario_usuario;
 			
-			$dados_usuario = array("login" => $usuario->facebook_usuario, "password" => $usuario->facebook_usuario, "email" => $usuario->email_usuario, "facebook_id" => $usuario->facebook_usuario, "tag_list" => $tags);
-			
-			try{
-				$usuario->QB = CallAPIQB("PUT","http://api.quickblox.com/users/1328.json",$dados_usuario,"QB-Token: " . $usuario->qbtoken);
-			} catch(PDOException $e){
-			
-                            //ERRO 512
-                            //MENSAGEM: Erro ao autalizar usuario no QB
-
-                            header('Ed-Return-Message: Erro ao autalizar usuario no QB', true, 512);
-                            echo '[]';
-
-                            die();
-
-                            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-			}
+//			$dados_usuario = array("login" => $usuario->facebook_usuario, "password" => $usuario->facebook_usuario, "email" => $usuario->email_usuario, "facebook_id" => $usuario->facebook_usuario, "tag_list" => $tags);
+//			
+//			try{
+//				$usuario->QB = CallAPIQB("PUT","http://api.quickblox.com/users/1328.json",$dados_usuario,"QB-Token: " . $usuario->qbtoken);
+//			} catch(PDOException $e){
+//			
+//                            //ERRO 512
+//                            //MENSAGEM: Erro ao autalizar usuario no QB
+//
+//                            header('Ed-Return-Message: Erro ao autalizar usuario no QB', true, 512);
+//                            echo '[]';
+//
+//                            die();
+//
+//                            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+//			}
 
 		}
 	
