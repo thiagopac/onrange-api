@@ -362,14 +362,14 @@ function adicionaUsuario()
 	
 	//Adequa tags
 		
-	$usuario->localizacao_usuario = str_replace(", ", "-", $usuario->localizacao_usuario);
-	$usuario->localizacao_usuario = str_replace(" ", "-", $usuario->localizacao_usuario);
+	//$usuario->localizacao_usuario = str_replace(", ", "-", $usuario->localizacao_usuario);
+	//$usuario->localizacao_usuario = str_replace(" ", "-", $usuario->localizacao_usuario);
 		
-	$usuario->aniversario_usuario = str_replace("/", "-", $usuario->aniversario_usuario);
+	//$usuario->aniversario_usuario = str_replace("/", "-", $usuario->aniversario_usuario);
 	
 	//Verifica se o usuário já está cadastrado
 	
-	$sql = "SELECT id_usuario, nome, sexo, email, localizacao, aniversario FROM USUARIO WHERE id_facebook = :id_facebook";
+	$sql = "SELECT id_usuario, nome, sobrenome, sexo, email, aniversario, cidade, pais FROM USUARIO WHERE id_facebook = :id_facebook";
 	try{
 		$conn = getConn();
 		$stmt = $conn->prepare($sql);
@@ -395,15 +395,17 @@ function adicionaUsuario()
 	if(!$registro_usuario){		//--------------####### NOVO USUÁRIO #######--------------//
 	//Insere na base e informa novo_usuario = 1
 	
-		$sql = "INSERT INTO USUARIO (nome, sexo, id_facebook, email, dt_usuario, localizacao, aniversario) VALUES (:nome_usuario, :sexo_usuario, :facebook_usuario, :email_usuario, NOW(), :localizacao_usuario, :aniversario_usuario)";
+		$sql = "INSERT INTO USUARIO (nome, sobrenome, sexo, id_facebook, email, dt_usuario, aniversario, cidade, pais) VALUES (:nome_usuario, :sobrenome_usuario, :sexo_usuario, :facebook_usuario, :email_usuario, NOW(), :aniversario_usuario, :cidade_usuario, :pais_usuario)";
 		try{
 			$stmt = $conn->prepare($sql);
 			$stmt->bindParam("nome_usuario",$usuario->nome_usuario);
+                        $stmt->bindParam("sobrenome_usuario",$usuario->sobrenome_usuario);
 			$stmt->bindParam("sexo_usuario",$usuario->sexo_usuario);
 			$stmt->bindParam("facebook_usuario",$usuario->facebook_usuario);
 			$stmt->bindParam("email_usuario",$usuario->email_usuario);
-			$stmt->bindParam("localizacao_usuario",$usuario->localizacao_usuario);
 			$stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
+                        $stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
+                        $stmt->bindParam("pais_usuario",$usuario->pais_usuario);
 			$stmt->execute();
 		} catch(PDOException $e){
 			
@@ -420,7 +422,7 @@ function adicionaUsuario()
 		
 		// Cria usuário no QuickBlox
 		
-		$tags = "sexo-" . $usuario->sexo_usuario . ",localizacao-" . $usuario->localizacao_usuario . ",aniversario-" . $usuario->aniversario_usuario;
+		//$tags = "sexo-" . $usuario->sexo_usuario . ",localizacao-" . $usuario->localizacao_usuario . ",aniversario-" . $usuario->aniversario_usuario;
 		
 //		$dados_usuario = array("login" => $usuario->facebook_usuario, "password" => $usuario->facebook_usuario, "email" => $usuario->email_usuario, "facebook_id" => $usuario->facebook_usuario, "tag_list" => $tags);
 //		
@@ -450,19 +452,21 @@ function adicionaUsuario()
 	
 		//Verifica se houve alteração das informações pessoais
 		
-		if($registro_usuario->nome != $usuario->nome_usuario || $registro_usuario->sexo != $usuario->sexo_usuario || $registro_usuario->email != $usuario->email_usuario || $registro_usuario->localizacao != $usuario->localizacao_usuario || $registro_usuario->aniversario != $usuario->aniversario_usuario){
+		if($registro_usuario->nome != $usuario->nome_usuario || $registro_usuario->sobrenome != $usuario->sobrenome_usuario || $registro_usuario->sexo != $usuario->sexo_usuario || $registro_usuario->email != $usuario->email_usuario || $registro_usuario->aniversario != $usuario->aniversario_usuario || $registro_usuario->cidade != $usuario->cidade_usuario || $registro_usuario->pais != $usuario->pais_usuario){
 			//Se houve alteração em algum dos dados, atualiza o registro do usuário na base do Onrange
 			
-			$sql = "UPDATE USUARIO SET nome = :nome_usuario, sexo = :sexo_usuario, email = :email_usuario, localizacao = :localizacao_usuario, aniversario = :aniversario_usuario WHERE id_usuario = :id_usuario";
+			$sql = "UPDATE USUARIO SET nome = :nome_usuario, sobrenome = :sobrenome_usuario, sexo = :sexo_usuario, email = :email_usuario, aniversario = :aniversario_usuario, cidade = :cidade_usuario, pais = :pais_usuario WHERE id_usuario = :id_usuario";
 			try{
 				$stmt = $conn->prepare($sql);
 				$stmt->bindParam("id_usuario",$usuario->id_usuario);
 				$stmt->bindParam("nome_usuario",$usuario->nome_usuario);
+                                $stmt->bindParam("sobrenome_usuario",$usuario->sobrenome_usuario);
 				$stmt->bindParam("sexo_usuario",$usuario->sexo_usuario);
 				$stmt->bindParam("email_usuario",$usuario->email_usuario);
-				$stmt->bindParam("localizacao_usuario",$usuario->localizacao_usuario);
 				$stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
-				$stmt->execute();
+				$stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
+                                $stmt->bindParam("pais_usuario",$usuario->pais_usuario);
+                                $stmt->execute();
 			} catch(PDOException $e){
                             
                             //ERRO 511
