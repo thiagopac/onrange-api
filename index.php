@@ -23,6 +23,7 @@ $app->post('/checkin/adicionacheckin','adicionaCheckin'); //faz checkin
 $app->post('/like/adicionalike','adicionaLike'); //dá like em alguém, em algum local
 $app->post('/usuario/login','loginUsuario'); //faz login de usuário
 $app->post('/promo/adicionapromocheckin','adicionaPromoCheckin'); //adiciona à caixa de entrada um Promo relacionado ao checkin do Usuário
+$app->post('/erro/adicionaerroqb','adicionaErroQB'); //no caso de um erro no cadastro do usuario no QB, adiciona este registro à tabela
 
 //PUT METHODS
 $app->put('/checkin/fazcheckout','fazCheckout'); //cancela o checkin vigente do usuário
@@ -1838,4 +1839,34 @@ function verificaConfiguracoes()
     
     return $configuracoes;
 	
+}
+
+function adicionaErroQB()
+{
+    $request = \Slim\Slim::getInstance()->request();
+    $erroQB = json_decode($request->getBody());
+
+    $sql = "INSERT INTO ERRO_QB (id_usuario, erro) VALUES (:id_usuario, :erro)";
+    try{
+        $conn = getConn();    
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam("id_usuario",$erroQB->id_usuario);
+        $stmt->bindParam("erro",$erroQB->erro);
+        $stmt->execute();
+    } catch(PDOException $e){
+
+        //ERRO 559
+        //MENSAGEM: Erro ao adicionar erro do QB
+
+        header('Ed-Return-Message: Erro ao adicionar erro do QB', true, 559);
+        echo '[]';
+
+        die();
+
+        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+    }
+
+    echo json_encode($erroQB);
+
+    $conn = null;
 }
