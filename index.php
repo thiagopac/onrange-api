@@ -952,7 +952,7 @@ function loginUsuario()
 
     //Verifica e devolve seus dados
 
-    $sql = "SELECT USUARIO.id_usuario, USUARIO.id_facebook AS facebook_usuario, USUARIO.id_qb AS quickblox_usuario, USUARIO.nome AS nome_usuario, USUARIO.sexo AS sexo_usuario, USUARIO.dt_usuario, USUARIO.dt_exclusao, USUARIO.dt_bloqueio, USUARIO.email AS email_usuario 
+    $sql = "SELECT id_usuario, id_facebook AS facebook_usuario, id_qb AS quickblox_usuario, nome AS nome_usuario, sobrenome AS sobrenome_usuario, sexo AS sexo_usuario, dt_usuario, dt_exclusao, dt_bloqueio, email AS email_usuario, cidade AS cidade_usuario, pais AS pais_usuario
             FROM USUARIO WHERE USUARIO.id_facebook = :id_facebook";
     try{
         $conn = getConn();
