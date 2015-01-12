@@ -73,36 +73,36 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 	
 	//Verifica qual seleção deve ser aplicada, se por checkins ou por distância
 	if($order_by=="checkin"){
-            $sql = "SELECT id_local, nome, latitude, longitude, 
-                    acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
-                    qt_checkin, id_tipo_local AS tipo_local, destaque
-                    FROM (
-                        SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, LOCAL.destaque
-                        FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
-                        WHERE
-                        CHECKINS_CORRENTES.qt_checkin > 0
-                        AND LOCAL.dt_exclusao IS NULL
-                        AND LOCAL.latitude BETWEEN :minLat AND :maxLat
-                        AND LOCAL.longitude Between :minLong AND :maxLong
-                        GROUP BY LOCAL.id_local
-                        ) AS FirstCut 
-                    WHERE acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 <= :range
-                    ORDER BY qt_checkin DESC";
-        }else{
-            $sql = "SELECT id_local, nome, latitude, longitude, 
-                    acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
-                    qt_checkin, id_tipo_local AS tipo_local, destaque
-                    FROM (
-                        SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, LOCAL.destaque
-                        FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
-                        WHERE
-                        LOCAL.dt_exclusao IS NULL
-                        AND LOCAL.latitude BETWEEN :minLat AND :maxLat
-                        AND LOCAL.longitude Between :minLong AND :maxLong
-                        GROUP BY LOCAL.id_local
-                        ) AS FirstCut 
-                    WHERE acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 <= :range
-                    ORDER BY distancia ASC";
+		$sql = "SELECT id_local, nome, latitude, longitude, 
+				acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
+				qt_checkin, id_tipo_local AS tipo_local, destaque
+				FROM (
+					SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, LOCAL.destaque
+					FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
+					WHERE
+					CHECKINS_CORRENTES.qt_checkin > 0
+					AND LOCAL.dt_exclusao IS NULL
+					AND LOCAL.latitude BETWEEN :minLat AND :maxLat
+					AND LOCAL.longitude Between :minLong AND :maxLong
+					GROUP BY LOCAL.id_local
+					) AS FirstCut 
+				WHERE acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 <= :range
+				ORDER BY qt_checkin DESC";
+    }else{
+		$sql = "SELECT id_local, nome, latitude, longitude, 
+				acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
+				qt_checkin, id_tipo_local AS tipo_local, destaque
+				FROM (
+					SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, LOCAL.destaque
+					FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
+					WHERE
+					LOCAL.dt_exclusao IS NULL
+					AND LOCAL.latitude BETWEEN :minLat AND :maxLat
+					AND LOCAL.longitude Between :minLong AND :maxLong
+					GROUP BY LOCAL.id_local
+					) AS FirstCut 
+				WHERE acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 <= :range
+				ORDER BY distancia ASC";
 	}
 
 	try{
@@ -229,10 +229,10 @@ function adicionaLocal()
         $sql = "SELECT id_checkin, id_local FROM CHECKIN WHERE id_usuario = :id_usuario AND dt_checkout IS NULL";
 
         try{
-                $conn = getConn();
-                $stmt = $conn->prepare($sql);
-                $stmt->bindParam("id_usuario",$local->id_usuario);
-                $stmt->execute();
+			$conn = getConn();
+			$stmt = $conn->prepare($sql);
+			$stmt->bindParam("id_usuario",$local->id_usuario);
+			$stmt->execute();
 
         } catch(PDOException $e){
 
@@ -252,47 +252,47 @@ function adicionaLocal()
 
         if($checkin){ //Se existe checkin prévio, faz o checkout
 
-                $sql = "UPDATE CHECKIN SET dt_checkout = NOW() WHERE id_checkin = :id_checkin";
+			$sql = "UPDATE CHECKIN SET dt_checkout = NOW() WHERE id_checkin = :id_checkin";
 
-                try{
-                        $stmt = $conn->prepare($sql);
-                        $stmt->bindParam("id_checkin",$checkin->id_checkin);
-                        $stmt->execute();
+			try{
+				$stmt = $conn->prepare($sql);
+				$stmt->bindParam("id_checkin",$checkin->id_checkin);
+				$stmt->execute();
 
-                } catch(PDOException $e){
-                    //ERRO 519
-                    //MENSAGEM: Erro ao realizar checkout no local anterior
+			} catch(PDOException $e){
+				//ERRO 519
+				//MENSAGEM: Erro ao realizar checkout no local anterior
 
-                    header('Ed-Return-Message: Erro ao realizar checkout no local anterior', true, 519);
-                    echo '[]';
+				header('Ed-Return-Message: Erro ao realizar checkout no local anterior', true, 519);
+				echo '[]';
 
-                    die();
+				die();
 
-                    //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-                }
+				//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+			}
 
-                //Atualiza a tabela de checkins correntes, decrementando 1 do local anterior
+			//Atualiza a tabela de checkins correntes, decrementando 1 do local anterior
 
-                $sql = "UPDATE CHECKINS_CORRENTES SET qt_checkin = qt_checkin - 1 WHERE id_local = :id_local";
+			$sql = "UPDATE CHECKINS_CORRENTES SET qt_checkin = qt_checkin - 1 WHERE id_local = :id_local";
 
-                try{
+			try{
 
-                        $stmt = $conn->prepare($sql);
-                        $stmt->bindParam("id_local",$checkin->id_local);
-                        $stmt->execute();
+				$stmt = $conn->prepare($sql);
+				$stmt->bindParam("id_local",$checkin->id_local);
+				$stmt->execute();
 
-                } catch(PDOException $e){
+			} catch(PDOException $e){
 
-                    //ERRO 506
-                    //MENSAGEM: Erro ao decrementar tabela de checkins correntes
+				//ERRO 506
+				//MENSAGEM: Erro ao decrementar tabela de checkins correntes
 
-                    header('Ed-Return-Message: Erro ao decrementar tabela de checkins correntes', true, 506);
-                    echo '[]';
+				header('Ed-Return-Message: Erro ao decrementar tabela de checkins correntes', true, 506);
+				echo '[]';
 
-                    die();
+				die();
 
-                    //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-                }
+				//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+			}
 
         }
 
@@ -300,10 +300,10 @@ function adicionaLocal()
         $sql = "INSERT INTO CHECKIN (id_usuario, id_local, dt_checkin) VALUES (:id_usuario, :id_local, NOW())";
 
         try{
-                $stmt = $conn->prepare($sql);
-                $stmt->bindParam("id_usuario",$local->id_usuario);
-                $stmt->bindParam("id_local",$local->id_local);
-                $stmt->execute();
+			$stmt = $conn->prepare($sql);
+			$stmt->bindParam("id_usuario",$local->id_usuario);
+			$stmt->bindParam("id_local",$local->id_local);
+			$stmt->execute();
 
         } catch(PDOException $e){
 
@@ -361,157 +361,36 @@ function adicionaUsuario()
 	$request = \Slim\Slim::getInstance()->request();
 	$usuario = json_decode($request->getBody());
 	
-	//Adequa tags
-		
-	//$usuario->localizacao_usuario = str_replace(", ", "-", $usuario->localizacao_usuario);
-	//$usuario->localizacao_usuario = str_replace(" ", "-", $usuario->localizacao_usuario);
-		
-	//$usuario->aniversario_usuario = str_replace("/", "-", $usuario->aniversario_usuario);
-	
-	//Verifica se o usuário já está cadastrado
-	
-	$sql = "SELECT id_usuario, nome, sobrenome, sexo, email, aniversario, cidade, pais FROM USUARIO WHERE id_facebook = :id_facebook";
+	$sql = "INSERT INTO USUARIO (nome, sobrenome, sexo, id_facebook, email, dt_usuario, aniversario, cidade, pais) VALUES (:nome_usuario, :sobrenome_usuario, :sexo_usuario, :facebook_usuario, :email_usuario, NOW(), :aniversario_usuario, :cidade_usuario, :pais_usuario)";
 	try{
-		$conn = getConn();
 		$stmt = $conn->prepare($sql);
-		$stmt->bindParam("id_facebook",$usuario->facebook_usuario);
+		$stmt->bindParam("nome_usuario",$usuario->nome_usuario);
+		$stmt->bindParam("sobrenome_usuario",$usuario->sobrenome_usuario);
+		$stmt->bindParam("sexo_usuario",$usuario->sexo_usuario);
+		$stmt->bindParam("facebook_usuario",$usuario->facebook_usuario);
+		$stmt->bindParam("email_usuario",$usuario->email_usuario);
+		$stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
+		$stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
+		$stmt->bindParam("pais_usuario",$usuario->pais_usuario);
 		$stmt->execute();
 	} catch(PDOException $e){
 		
-            //ERRO 508
-            //MENSAGEM: Erro ao buscar usuario
+		//ERRO 509
+		//MENSAGEM: Erro ao adicionar novo usuario
 
-            header('Ed-Return-Message: Erro ao buscar usuario', true, 508);
-            echo '[]';
+		header('Ed-Return-Message: Erro ao adicionar novo usuario', true, 509);
+		echo '[]';
 
-            die();
+		die();
 
-            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+		//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 	}
 		
-	$registro_usuario = $stmt->fetch(PDO::FETCH_OBJ);
+	$usuario->id_usuario = $conn->lastInsertId();
 	
-	$usuario->id_usuario = $registro_usuario->id_usuario;
-	
-	if(!$registro_usuario){		//--------------####### NOVO USUÁRIO #######--------------//
-	//Insere na base e informa novo_usuario = 1
-	
-		$sql = "INSERT INTO USUARIO (nome, sobrenome, sexo, id_facebook, email, dt_usuario, aniversario, cidade, pais) VALUES (:nome_usuario, :sobrenome_usuario, :sexo_usuario, :facebook_usuario, :email_usuario, NOW(), :aniversario_usuario, :cidade_usuario, :pais_usuario)";
-		try{
-			$stmt = $conn->prepare($sql);
-			$stmt->bindParam("nome_usuario",$usuario->nome_usuario);
-                        $stmt->bindParam("sobrenome_usuario",$usuario->sobrenome_usuario);
-			$stmt->bindParam("sexo_usuario",$usuario->sexo_usuario);
-			$stmt->bindParam("facebook_usuario",$usuario->facebook_usuario);
-			$stmt->bindParam("email_usuario",$usuario->email_usuario);
-			$stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
-                        $stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
-                        $stmt->bindParam("pais_usuario",$usuario->pais_usuario);
-			$stmt->execute();
-		} catch(PDOException $e){
-			
-                    //ERRO 509
-                    //MENSAGEM: Erro ao adicionar novo usuario
-
-                    header('Ed-Return-Message: Erro ao adicionar novo usuario', true, 509);
-                    echo '[]';
-
-                    die();
-
-                    //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-		}
-		
-		// Cria usuário no QuickBlox
-		
-		//$tags = "sexo-" . $usuario->sexo_usuario . ",localizacao-" . $usuario->localizacao_usuario . ",aniversario-" . $usuario->aniversario_usuario;
-		
-//		$dados_usuario = array("login" => $usuario->facebook_usuario, "password" => $usuario->facebook_usuario, "email" => $usuario->email_usuario, "facebook_id" => $usuario->facebook_usuario, "tag_list" => $tags);
-//		
-//		try{
-//			$usuario->QB = CallAPIQB("POST","http://api.quickblox.com/users.json",$dados_usuario,"QB-Token: " . $usuario->qbtoken);
-//		} catch(PDOException $e){
-//		
-//                    //ERRO 510
-//                    //MENSAGEM: Erro ao criar usuario no QB
-//
-//                    header('Ed-Return-Message: Erro ao criar usuario no QB', true, 510);
-//                    echo '[]';
-//
-//                    die();
-//
-//                    //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-//		}
-//		
-		$usuario->id_usuario = $conn->lastInsertId();
-		$usuario->novo_usuario = "1";
-		
-		$usuario->id_output = "1";
-		$usuario->desc_output = "Usuario criado com sucesso. Login realizado com sucesso.";
-		
-	}
-	else{	   //--------------####### USUÁRIO EXISTENTE #######--------------//
-	
-		//Verifica se houve alteração das informações pessoais
-		
-		if($registro_usuario->nome != $usuario->nome_usuario || $registro_usuario->sobrenome != $usuario->sobrenome_usuario || $registro_usuario->sexo != $usuario->sexo_usuario || $registro_usuario->email != $usuario->email_usuario || $registro_usuario->aniversario != $usuario->aniversario_usuario || $registro_usuario->cidade != $usuario->cidade_usuario || $registro_usuario->pais != $usuario->pais_usuario){
-			//Se houve alteração em algum dos dados, atualiza o registro do usuário na base do Onrange
-			
-			$sql = "UPDATE USUARIO SET nome = :nome_usuario, sobrenome = :sobrenome_usuario, sexo = :sexo_usuario, email = :email_usuario, aniversario = :aniversario_usuario, cidade = :cidade_usuario, pais = :pais_usuario WHERE id_usuario = :id_usuario";
-			try{
-				$stmt = $conn->prepare($sql);
-				$stmt->bindParam("id_usuario",$usuario->id_usuario);
-				$stmt->bindParam("nome_usuario",$usuario->nome_usuario);
-                                $stmt->bindParam("sobrenome_usuario",$usuario->sobrenome_usuario);
-				$stmt->bindParam("sexo_usuario",$usuario->sexo_usuario);
-				$stmt->bindParam("email_usuario",$usuario->email_usuario);
-				$stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
-				$stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
-                                $stmt->bindParam("pais_usuario",$usuario->pais_usuario);
-                                $stmt->execute();
-			} catch(PDOException $e){
-                            
-                            //ERRO 511
-                            //MENSAGEM: Erro ao autalizar usuario
-
-                            header('Ed-Return-Message: Erro ao autalizar usuario', true, 511);
-                            echo '[]';
-
-                            die();
-
-                            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-                    
-			}
-		
-			// Atualiza usuário no QuickBlox
-		
-//			$tags = "sexo-" . $usuario->sexo_usuario . ",localizacao-" . $usuario->localizacao_usuario . ",aniversario-" . $usuario->aniversario_usuario;
-//			
-//			$dados_usuario = array("login" => $usuario->facebook_usuario, "password" => $usuario->facebook_usuario, "email" => $usuario->email_usuario, "facebook_id" => $usuario->facebook_usuario, "tag_list" => $tags);
-//			
-//			try{
-//				$usuario->QB = CallAPIQB("PUT","http://api.quickblox.com/users/1328.json",$dados_usuario,"QB-Token: " . $usuario->qbtoken);
-//			} catch(PDOException $e){
-//			
-//                            //ERRO 512
-//                            //MENSAGEM: Erro ao autalizar usuario no QB
-//
-//                            header('Ed-Return-Message: Erro ao autalizar usuario no QB', true, 512);
-//                            echo '[]';
-//
-//                            die();
-//
-//                            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-//			}
-
-		}
-	
-		$usuario->novo_usuario = "0";
-		
-		$usuario->id_output = "1";
-		$usuario->desc_output = "Login realizado com sucesso.";
-	
-	}
-	
+	$usuario->id_output = "1";
+	$usuario->desc_output = "Usuario criado com sucesso.";
+				
 	echo json_encode($usuario);
 	
 	$conn = null;
@@ -951,17 +830,17 @@ function loginUsuario()
     $request = \Slim\Slim::getInstance()->request();
     $usuario = json_decode($request->getBody());
 
-    //Verifica e devolve seus dados
+    //Verifica dados
 
-    $sql = "SELECT id_usuario, id_facebook AS facebook_usuario, id_qb AS quickblox_usuario, nome AS nome_usuario, sobrenome AS sobrenome_usuario, sexo AS sexo_usuario, dt_usuario, dt_exclusao, dt_bloqueio, email AS email_usuario, cidade AS cidade_usuario, pais AS pais_usuario
-            FROM USUARIO WHERE USUARIO.id_facebook = :id_facebook";
+    $sql = "SELECT id_usuario, id_facebook AS facebook_usuario, id_qb AS quickblox_usuario, nome AS nome_usuario, sobrenome AS sobrenome_usuario, sexo AS sexo_usuario, dt_usuario, dt_exclusao, dt_bloqueio, email AS email_usuario, cidade AS cidade_usuario, pais AS pais_usuario, idioma AS idioma_usuario
+            FROM USUARIO WHERE id_facebook = :id_facebook";
     try{
         $conn = getConn();
         $stmt = $conn->prepare($sql);
         $stmt->bindParam("id_facebook",$usuario->facebook_usuario);
         $stmt->execute();
 
-        $usuario = $stmt->fetch(PDO::FETCH_OBJ);
+        $registro_usuario = $stmt->fetch(PDO::FETCH_OBJ);
 
     } catch(PDOException $e){
 
@@ -975,10 +854,10 @@ function loginUsuario()
     }
 
     //Se o usuário foi encontrado
-    if($usuario){
+    if($registro_usuario){
 
         //Verificando se usuario foi bloqueado logicamente através do preenchimento do campo DT_BLOQUEIO
-        if($usuario->dt_bloqueio != null){
+        if($registro_usuario->dt_bloqueio != null){
 
             //ERRO 501
             //MENSAGEM: Usuario bloqueado
@@ -990,17 +869,16 @@ function loginUsuario()
 
         } 
         else{
-            if($usuario->dt_exclusao != null){ //Verificando se usuario foi excluído logicamente através do preenchimento do campo DT_EXCLUSAO
+            if($registro_usuario->dt_exclusao != null){ //Verificando se usuario foi excluído logicamente através do preenchimento do campo DT_EXCLUSAO
 
                 //Seta NULL no campo DT_EXCLUSAO, pois o usuario deseja retornar ao aplicativo
 
-                $sql = "UPDATE USUARIO SET dt_exclusao = NULL 
-                WHERE id_usuario = :id_usuario";
+                $sql = "UPDATE USUARIO SET dt_exclusao = NULL WHERE id_usuario = :id_usuario";
 
                 try{
-                        $stmt = $conn->prepare($sql);
-                        $stmt->bindParam("id_usuario",$usuario->id_usuario);
-                        $stmt->execute();
+					$stmt = $conn->prepare($sql);
+					$stmt->bindParam("id_usuario",$registro_usuario->id_usuario);
+					$stmt->execute();
 
                 } catch(PDOException $e){
 
@@ -1013,9 +891,43 @@ function loginUsuario()
                     die();
                 }
             }
+			
+			//Verifica se houve alteração das informações pessoais
+		
+			if($registro_usuario->nome != $usuario->nome_usuario || $registro_usuario->sobrenome != $usuario->sobrenome_usuario || $registro_usuario->sexo != $usuario->sexo_usuario || $registro_usuario->email != $usuario->email_usuario || $registro_usuario->aniversario != $usuario->aniversario_usuario || $registro_usuario->cidade != $usuario->cidade_usuario || $registro_usuario->pais != $usuario->pais_usuario || $registro_usuario->idioma != $usuario->idioma_usuario){
+			//Se houve alteração em algum dos dados, atualiza o registro do usuário na base do Onrange
+			
+				$sql = "UPDATE USUARIO SET nome = :nome_usuario, sobrenome = :sobrenome_usuario, sexo = :sexo_usuario, email = :email_usuario, aniversario = :aniversario_usuario, cidade = :cidade_usuario, pais = :pais_usuario, idioma = :idioma_usuario WHERE id_usuario = :id_usuario";
+				try{
+					$stmt = $conn->prepare($sql);
+					$stmt->bindParam("id_usuario",$registro_usuario->id_usuario);
+					$stmt->bindParam("nome_usuario",$usuario->nome_usuario);
+					$stmt->bindParam("sobrenome_usuario",$usuario->sobrenome_usuario);
+					$stmt->bindParam("sexo_usuario",$usuario->sexo_usuario);
+					$stmt->bindParam("email_usuario",$usuario->email_usuario);
+					$stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
+					$stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
+					$stmt->bindParam("pais_usuario",$usuario->pais_usuario);
+					$stmt->bindParam("idioma_usuario",$usuario->idioma_usuario);
+					$stmt->execute();
+				} catch(PDOException $e){
+                            
+					//ERRO 511
+					//MENSAGEM: Erro ao autalizar usuario
 
+					header('Ed-Return-Message: Erro ao autalizar usuario', true, 511);
+					echo '[]';
+
+					die();
+
+					//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+                    
+				}
+			}
             //Login realizado com sucesso. Retorna o objeto com os dados do usuário
 
+            $usuario->id_usuario = $registro_usuario->id_usuario;
+            
             echo json_encode($usuario);
 
         }
@@ -1846,12 +1758,14 @@ function adicionaErroQB()
     $request = \Slim\Slim::getInstance()->request();
     $erroQB = json_decode($request->getBody());
 
-    $sql = "INSERT INTO ERRO_QB (id_usuario, erro) VALUES (:id_usuario, :erro)";
+    $sql = "INSERT INTO ERRO_QB (id_usuario, erro, funcao, plataforma) VALUES (:id_usuario, :erro, :funcao, :plataforma)";
     try{
         $conn = getConn();    
         $stmt = $conn->prepare($sql);
         $stmt->bindParam("id_usuario",$erroQB->id_usuario);
         $stmt->bindParam("erro",$erroQB->erro);
+		$stmt->bindParam("funcao",$erroQB->funcao);
+		$stmt->bindParam("plataforma",$erroQB->plataforma);
         $stmt->execute();
     } catch(PDOException $e){
 
