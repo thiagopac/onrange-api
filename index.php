@@ -891,38 +891,42 @@ function loginUsuario()
                     die();
                 }
             }
+            
+            //Adequa data de nascimento
+            
+            //$usuario->aniversario = date("Y-m-d", strtotime($usuario->aniversario));
 			
             //Verifica se houve alteração das informações pessoais
 
             if($registro_usuario->nome != $usuario->nome_usuario || $registro_usuario->sobrenome != $usuario->sobrenome_usuario || $registro_usuario->sexo != $usuario->sexo_usuario || $registro_usuario->email != $usuario->email_usuario || $registro_usuario->aniversario != $usuario->aniversario_usuario || $registro_usuario->cidade != $usuario->cidade_usuario || $registro_usuario->pais != $usuario->pais_usuario || $registro_usuario->idioma != $usuario->idioma_usuario){
             //Se houve alteração em algum dos dados, atualiza o registro do usuário na base do Onrange
 
-                    $sql = "UPDATE USUARIO SET nome = :nome_usuario, sobrenome = :sobrenome_usuario, sexo = :sexo_usuario, email = :email_usuario, aniversario = :aniversario_usuario, cidade = :cidade_usuario, pais = :pais_usuario, idioma = :idioma_usuario WHERE id_usuario = :id_usuario";
-                    try{
-                            $stmt = $conn->prepare($sql);
-                            $stmt->bindParam("id_usuario",$registro_usuario->id_usuario);
-                            $stmt->bindParam("nome_usuario",$usuario->nome_usuario);
-                            $stmt->bindParam("sobrenome_usuario",$usuario->sobrenome_usuario);
-                            $stmt->bindParam("sexo_usuario",$usuario->sexo_usuario);
-                            $stmt->bindParam("email_usuario",$usuario->email_usuario);
-                            $stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
-                            $stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
-                            $stmt->bindParam("pais_usuario",$usuario->pais_usuario);
-                            $stmt->bindParam("idioma_usuario",$usuario->idioma_usuario);
-                            $stmt->execute();
-                    } catch(PDOException $e){
+                $sql = "UPDATE USUARIO SET nome = :nome_usuario, sobrenome = :sobrenome_usuario, sexo = :sexo_usuario, email = :email_usuario, aniversario = :aniversario_usuario, cidade = :cidade_usuario, pais = :pais_usuario, idioma = :idioma_usuario WHERE id_usuario = :id_usuario";
+                try{
+                        $stmt = $conn->prepare($sql);
+                        $stmt->bindParam("id_usuario",$registro_usuario->id_usuario);
+                        $stmt->bindParam("nome_usuario",$usuario->nome_usuario);
+                        $stmt->bindParam("sobrenome_usuario",$usuario->sobrenome_usuario);
+                        $stmt->bindParam("sexo_usuario",$usuario->sexo_usuario);
+                        $stmt->bindParam("email_usuario",$usuario->email_usuario);
+                        $stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
+                        $stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
+                        $stmt->bindParam("pais_usuario",$usuario->pais_usuario);
+                        $stmt->bindParam("idioma_usuario",$usuario->idioma_usuario);
+                        $stmt->execute();
+                } catch(PDOException $e){
 
-                            //ERRO 511
-                            //MENSAGEM: Erro ao autalizar usuario
+                        //ERRO 511
+                        //MENSAGEM: Erro ao autalizar usuario
 
-                            header('Ed-Return-Message: Erro ao autalizar usuario', true, 511);
-                            echo '[]';
+                        header('Ed-Return-Message: Erro ao autalizar usuario', true, 511);
+                        echo '[]';
 
-                            die();
+                        die();
 
-                            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+                        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 
-                    }
+                }
             }
             //Login realizado com sucesso. Retorna o objeto com os dados do usuário
 
