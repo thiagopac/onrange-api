@@ -166,8 +166,8 @@ function adicionaLocal()
     
     $configuracoes = verificaConfiguracoes();
 
-    if($ultimo_local->minutos_ultimo_local > $configuracoes->t_local){ //Se o ultimo local criado pelo usuario foi criado fora do tempo mínimo nas configurações
-
+    //Se o usuário nunca criou local, ou se o ultimo local criado pelo usuario foi criado há mais tempo que o mínimo nas configurações
+    if(!$ultimo_local || ($ultimo_local->minutos_ultimo_local > $configuracoes->t_local)){
 
         //Insere o novo local
 
