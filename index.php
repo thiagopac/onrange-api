@@ -1298,8 +1298,9 @@ function unMatch()
     }
     
     $sql = "UPDATE MATCHES SET dt_block = NOW() 
-            WHERE (id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2)
-              OR  (id_usuario1 = :id_usuario2 AND id_usuario2 = :id_usuario1)";
+            WHERE ((id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2)
+              OR  (id_usuario1 = :id_usuario2 AND id_usuario2 = :id_usuario1))
+              AND dt_block IS NOT NULL";
 
     try{
             $stmt = $conn->prepare($sql);
@@ -1313,6 +1314,29 @@ function unMatch()
         //MENSAGEM: Erro ao desfazer match
 
         header('Ed-Return-Message: Erro ao desfazer match', true, 540);	
+        echo '[]';
+
+        die();
+    }
+    
+    //Expira os likes dos envolvidos
+    $sql = "UPDATE LIKES SET dt_expiracao = NOW() 
+            WHERE ((id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2)
+              OR  (id_usuario1 = :id_usuario2 AND id_usuario2 = :id_usuario1))
+              AND dt_expiracao IS NOT NULL";
+
+    try{
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam("id_usuario1",$usuario1->id_usuario);
+            $stmt->bindParam("id_usuario2",$usuario2->id_usuario);
+            $stmt->execute();
+
+    } catch(PDOException $e){
+
+        //ERRO 560
+        //MENSAGEM: Erro ao desfazer match
+
+        header('Ed-Return-Message: Erro ao desfazer likes', true, 560);	
         echo '[]';
 
         die();
