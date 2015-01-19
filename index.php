@@ -162,11 +162,11 @@ function adicionaLocal()
         //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
     }
 
-    $ultimo_local = $stmt->fetch(PDO::FETCH_OBJ);
-    
+	$ultimo_local = $stmt->fetch(PDO::FETCH_OBJ);
+	
     $configuracoes = verificaConfiguracoes();
 
-    //Se o usuário nunca criou local, ou se o ultimo local criado pelo usuario foi criado há mais tempo que o mínimo nas configurações
+	//Se o usuário nunca criou local, ou se o ultimo local criado pelo usuario foi criado há mais tempo que o mínimo nas configurações
     if(!$ultimo_local || ($ultimo_local->minutos_ultimo_local > $configuracoes->t_local)){
 
         //Insere o novo local
@@ -361,13 +361,15 @@ function adicionaUsuario()
 	$request = \Slim\Slim::getInstance()->request();
 	$usuario = json_decode($request->getBody());
 	
-	$sql = "INSERT INTO USUARIO (nome, sobrenome, sexo, id_facebook, email, dt_usuario, aniversario, cidade, pais) VALUES (:nome_usuario, :sobrenome_usuario, :sexo_usuario, :facebook_usuario, :email_usuario, NOW(), :aniversario_usuario, :cidade_usuario, :pais_usuario)";
+	$sql = "INSERT INTO USUARIO (nome, sobrenome, sexo, id_facebook, id_qb, email, dt_usuario, aniversario, cidade, pais) VALUES (:nome_usuario, :sobrenome_usuario, :sexo_usuario, :facebook_usuario, :quickblox_usuario, :email_usuario, NOW(), :aniversario_usuario, :cidade_usuario, :pais_usuario)";
 	try{
+		$conn = getConn();
 		$stmt = $conn->prepare($sql);
 		$stmt->bindParam("nome_usuario",$usuario->nome_usuario);
 		$stmt->bindParam("sobrenome_usuario",$usuario->sobrenome_usuario);
 		$stmt->bindParam("sexo_usuario",$usuario->sexo_usuario);
 		$stmt->bindParam("facebook_usuario",$usuario->facebook_usuario);
+		$stmt->bindParam("quickblox_usuario",$usuario->quickblox_usuario);
 		$stmt->bindParam("email_usuario",$usuario->email_usuario);
 		$stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
 		$stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
@@ -784,6 +786,9 @@ function adicionaLike()
 
                     }
                     $like->match = "1";
+					
+                    //$like->usuario1_qb = $usuario1->id_qb;
+                    //$like->usuario2_qb = $usuario2->id_qb;
             }
 
             $like->id_output = "1";
@@ -931,6 +936,7 @@ function loginUsuario()
             //Login realizado com sucesso. Retorna o objeto com os dados do usuário
 
             $usuario->id_usuario = $registro_usuario->id_usuario;
+            $usuario->quickblox_usuario = $registro_usuario->quickblox_usuario;
             
             echo json_encode($usuario);
 
@@ -1762,11 +1768,11 @@ function adicionaErroQB()
     $request = \Slim\Slim::getInstance()->request();
     $erroQB = json_decode($request->getBody());
 
-    $sql = "INSERT INTO ERRO_QB (id_usuario, erro, funcao, plataforma) VALUES (:id_usuario, :erro, :funcao, :plataforma)";
+    $sql = "INSERT INTO ERRO_QB (id_facebook, erro, funcao, plataforma) VALUES (:facebook_usuario, :erro, :funcao, :plataforma)";
     try{
         $conn = getConn();    
         $stmt = $conn->prepare($sql);
-        $stmt->bindParam("id_usuario",$erroQB->id_usuario);
+        $stmt->bindParam("facebook_usuario",$erroQB->facebook_usuario);
         $stmt->bindParam("erro",$erroQB->erro);
 		$stmt->bindParam("funcao",$erroQB->funcao);
 		$stmt->bindParam("plataforma",$erroQB->plataforma);
