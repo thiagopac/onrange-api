@@ -614,7 +614,7 @@ function adicionaLike()
 
     }
     else{ //Se o checkin do usuário destino ainda é válido
-
+	
         //Verifica se o usuário já foi curtido ou não
 
         $sql = "SELECT id_like FROM LIKES WHERE id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2 AND dt_expiracao IS NULL";
@@ -697,7 +697,9 @@ function adicionaLike()
                     $like->match = "0";
             else{	//--------------------------######## MATCH ########--------------------------//
 
-                    // Busca os IDs do QB dos usuários
+                    /*
+					
+					// Busca os IDs do QB dos usuários
 
                     try{
                     $sql = "SELECT id_qb FROM USUARIO WHERE id_usuario = :id_usuario1";
@@ -761,7 +763,9 @@ function adicionaLike()
                         die();
                     }
 
-                    //Insere na tabela e retorna match = 1
+					*/
+					
+					//Insere na tabela e retorna match = 1
 
                     $sql = "INSERT INTO MATCHES (id_usuario1, id_usuario2, id_local, dt_match) VALUES (:id_usuario1, :id_usuario2, :id_local, NOW())";
 
@@ -787,8 +791,29 @@ function adicionaLike()
                     }
                     $like->match = "1";
 					
-                    //$like->usuario1_qb = $usuario1->id_qb;
-                    //$like->usuario2_qb = $usuario2->id_qb;
+					//Busca o id_qb do usuario de destino para abertura do chat pelo app
+					
+					try{
+						$sql = "SELECT id_qb FROM USUARIO WHERE id_usuario = :id_usuario2";
+						$stmt = $conn->prepare($sql);
+						$stmt->bindParam("id_usuario2",$like->id_usuario2);
+						$stmt->execute();
+						$usuario2 = $stmt->fetch(PDO::FETCH_OBJ);
+
+                    } catch(PDOException $e){
+
+                        //ERRO 527
+                        //MENSAGEM: Erro ao buscar ID do QB do usuario 2
+
+                        header('Ed-Return-Message: Erro ao buscar ID do QB do usuario 2', true, 527);
+                        echo '[]';
+
+                        die();
+
+                        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+                    }
+
+                    $like->quickblox_usuario = $usuario2->id_qb;
             }
 
             $like->id_output = "1";
