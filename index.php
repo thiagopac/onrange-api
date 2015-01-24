@@ -1263,6 +1263,7 @@ function unMatch()
     $request = \Slim\Slim::getInstance()->request();
     $unmatch = json_decode($request->getBody());
     
+    /*
     try{
         
         $unmatch->apaga_chat = CallAPIQB("DELETE","https://api.quickblox.com/chat/Dialog/" . $unmatch->id_chat . ".json","","QB-Token: " . $unmatch->qbtoken);
@@ -1277,6 +1278,9 @@ function unMatch()
 
         die();
     }
+    
+     * 
+     */
     
     $sql = "SELECT id_usuario FROM USUARIO
             WHERE id_facebook = :id_facebook_usuario";
@@ -1359,7 +1363,7 @@ function unMatch()
     } catch(PDOException $e){
 
         //ERRO 560
-        //MENSAGEM: Erro ao desfazer match
+        //MENSAGEM: Erro ao desfazer likes
 
         header('Ed-Return-Message: Erro ao desfazer likes', true, 560);	
         echo '[]';
