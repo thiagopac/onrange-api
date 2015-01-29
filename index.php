@@ -252,47 +252,68 @@ function adicionaLocal()
 
         if($checkin){ //Se existe checkin prévio, faz o checkout
 
-			$sql = "UPDATE CHECKIN SET dt_checkout = NOW() WHERE id_checkin = :id_checkin";
+            $sql = "UPDATE CHECKIN SET dt_checkout = NOW() WHERE id_checkin = :id_checkin";
 
-			try{
-				$stmt = $conn->prepare($sql);
-				$stmt->bindParam("id_checkin",$checkin->id_checkin);
-				$stmt->execute();
+            try{
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bindParam("id_checkin",$checkin->id_checkin);
+                    $stmt->execute();
 
-			} catch(PDOException $e){
-				//ERRO 519
-				//MENSAGEM: Erro ao realizar checkout no local anterior
+            } catch(PDOException $e){
+                    //ERRO 519
+                    //MENSAGEM: Erro ao realizar checkout no local anterior
 
-				header('Ed-Return-Message: Erro ao realizar checkout no local anterior', true, 519);
-				echo '[]';
+                    header('Ed-Return-Message: Erro ao realizar checkout no local anterior', true, 519);
+                    echo '[]';
 
-				die();
+                    die();
 
-				//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-			}
+                    //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+            }
 
-			//Atualiza a tabela de checkins correntes, decrementando 1 do local anterior
+            //Atualiza a tabela de checkins correntes, decrementando 1 do local anterior
 
-			$sql = "UPDATE CHECKINS_CORRENTES SET qt_checkin = qt_checkin - 1 WHERE id_local = :id_local";
+            $sql = "UPDATE CHECKINS_CORRENTES SET qt_checkin = qt_checkin - 1 WHERE id_local = :id_local";
 
-			try{
+            try{
 
-				$stmt = $conn->prepare($sql);
-				$stmt->bindParam("id_local",$checkin->id_local);
-				$stmt->execute();
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bindParam("id_local",$checkin->id_local);
+                    $stmt->execute();
 
-			} catch(PDOException $e){
+            } catch(PDOException $e){
 
-				//ERRO 506
-				//MENSAGEM: Erro ao decrementar tabela de checkins correntes
+                    //ERRO 506
+                    //MENSAGEM: Erro ao decrementar tabela de checkins correntes
 
-				header('Ed-Return-Message: Erro ao decrementar tabela de checkins correntes', true, 506);
-				echo '[]';
+                    header('Ed-Return-Message: Erro ao decrementar tabela de checkins correntes', true, 506);
+                    echo '[]';
 
-				die();
+                    die();
 
-				//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-			}
+                    //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+            }
+            
+            //Expira todos os likes dados pelo usuário
+
+            $sql = "UPDATE LIKES SET dt_expiracao = NOW() WHERE id_usuario1 = :id_usuario AND dt_expiracao IS NULL";
+
+            try{
+
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam("id_usuario",$local->id_usuario);
+                $stmt->execute();
+
+            } catch(PDOException $e){
+
+                //ERRO 535
+                //MENSAGEM: Erro ao expirar os likes do usuario
+
+                header('Ed-Return-Message: Erro ao expirar os likes do usuario', true, 535);	
+                echo '[]';
+
+                die();
+            }
 
         }
 
