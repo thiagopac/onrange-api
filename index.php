@@ -5,13 +5,13 @@ $app = new \Slim\Slim();
 $app->response()->header('Content-Type', 'application/json;charset=utf-8');
 
 //GET METHODS
-$app->get('/', function () { echo "{\"Erro\":\"diretÃ³rio raiz\"}"; }); //erro no raiz
+$app->get('/', function () { echo "{\"Erro\":\"diretório raiz\"}"; }); //erro no raiz
 $app->get('/local/listatodoslocais','listaTodosLocais'); //traz todos locais
-$app->get('/local/listaLocaisRange/:latitude_atual/:longitude_atual/:range/:order_by','listaLocaisRange'); //traz os locais dentro do range definido pelo usuÃ¡rio, baseando-se no local atual
-$app->get('/checkin/listaUsuariosCheckin/:id_local/:sexo/:id_usuario','listaUsuariosCheckin'); //traz os usuÃ¡rios com checkin corrente no local informado
-$app->get('/checkin/verificaCheckinUsuario/:id_usuario','verificaCheckinUsuario'); //retorna o Local onde o usuaÃ¡rio possui checkin corrente
-$app->get('/match/listaMatches/:id_usuario','listaMatches'); //traz uma lista com todos os matches vÃ¡lidos do usuÃ¡rio informado
-$app->get('/promo/listaPromosUsuario/:id_usuario','listaPromosUsuario'); //traz uma lista com todos as promos do usuÃ¡rio informado
+$app->get('/local/listaLocaisRange/:latitude_atual/:longitude_atual/:range/:order_by','listaLocaisRange'); //traz os locais dentro do range definido pelo usuário, baseando-se no local atual
+$app->get('/checkin/listaUsuariosCheckin/:id_local/:sexo/:id_usuario','listaUsuariosCheckin'); //traz os usuários com checkin corrente no local informado
+$app->get('/checkin/verificaCheckinUsuario/:id_usuario','verificaCheckinUsuario'); //retorna o Local onde o usuaário possui checkin corrente
+$app->get('/match/listaMatches/:id_usuario','listaMatches'); //traz uma lista com todos os matches válidos do usuário informado
+$app->get('/promo/listaPromosUsuario/:id_usuario','listaPromosUsuario'); //traz uma lista com todos as promos do usuário informado
 $app->get('/promo/verificapromolocal/:id_local','verificaPromoLocal'); //retorna o id do promo referente ao Local, caso exista
 $app->get('/promo/verificapromosnaolidos/:id_usuario','verificaPromosNaoLidos'); //retorna 1 caso haja promos nao lidos na caixa de entrada, caso contrario retorna 0
 $app->get('/configuracao/verificaconfiguracoes','verificaConfiguracoes'); //seta variaveis globais com configuracoes a serem usadas pelo app
@@ -20,15 +20,15 @@ $app->get('/configuracao/verificaconfiguracoes','verificaConfiguracoes'); //seta
 $app->post('/local/adicionalocal','adicionaLocal'); //cria novo local
 $app->post('/usuario/adicionausuario','adicionaUsuario'); //cria novo usuario
 $app->post('/checkin/adicionacheckin','adicionaCheckin'); //faz checkin
-$app->post('/like/adicionalike','adicionaLike'); //dÃ¡ like em alguÃ©m, em algum local
-$app->post('/usuario/login','loginUsuario'); //faz login de usuÃ¡rio
-$app->post('/promo/adicionapromocheckin','adicionaPromoCheckin'); //adiciona Ã  caixa de entrada um Promo relacionado ao checkin do UsuÃ¡rio
-$app->post('/erro/adicionaerroqb','adicionaErroQB'); //no caso de um erro no cadastro do usuario no QB, adiciona este registro Ã  tabela
+$app->post('/like/adicionalike','adicionaLike'); //dá like em alguém, em algum local
+$app->post('/usuario/login','loginUsuario'); //faz login de usuário
+$app->post('/promo/adicionapromocheckin','adicionaPromoCheckin'); //adiciona à  caixa de entrada um Promo relacionado ao checkin do Usuário
+$app->post('/erro/adicionaerroqb','adicionaErroQB'); //no caso de um erro no cadastro do usuario no QB, adiciona este registro à  tabela
 
 //PUT METHODS
-$app->put('/checkin/fazcheckout','fazCheckout'); //cancela o checkin vigente do usuÃ¡rio
-$app->put('/match/unmatch','unMatch'); //cancela o Match com o usuÃ¡rio informado
-$app->put('/usuario/exclui','apagaUsuario'); //apaga usuÃ¡rio
+$app->put('/checkin/fazcheckout','fazCheckout'); //cancela o checkin vigente do usuário
+$app->put('/match/unmatch','unMatch'); //cancela o Match com o usuário informado
+$app->put('/usuario/exclui','apagaUsuario'); //apaga usuário
 $app->put('/promo/marcapromovisualizado','marcaPromoVisualizado'); //marca um Promo como visualizado na caixa de entrada do usuario
 $app->put('/promo/exclui','apagaPromoUsuario'); //apaga um Promo da caixa de entrada de um usuario
 
@@ -71,7 +71,7 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 	$maxLong = $longitude_atual + rad2deg($range/6371/cos(deg2rad($latitude_atual)));
 	$minLong = $longitude_atual - rad2deg($range/6371/cos(deg2rad($latitude_atual)));
 	
-	//Verifica qual seleÃ§Ã£o deve ser aplicada, se por checkins ou por distÃ¢ncia
+	//Verifica qual seleção deve ser aplicada, se por checkins ou por distância
 	if($order_by=="checkin"){
 		$sql = "SELECT id_local, nome, latitude, longitude, 
 				acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
@@ -141,7 +141,7 @@ function adicionaLocal()
     $request = \Slim\Slim::getInstance()->request();
     $local = json_decode($request->getBody());
 
-    //Verifica se o usuÃ¡rio inseriu um local dentro do tempo mÃ­nimo definido nas configuraÃ§Ãµes
+    //Verifica se o usuário inseriu um local dentro do tempo mínimo definido nas configurações
 
     $sql = "SELECT TIME_TO_SEC(TIMEDIFF(NOW(),dt_local))/60 as minutos_ultimo_local FROM LOCAL WHERE id_usuario = :id_usuario ORDER BY dt_local DESC LIMIT 1";
     try{
@@ -166,7 +166,7 @@ function adicionaLocal()
 	
     $configuracoes = verificaConfiguracoes();
 
-	//Se o usuÃ¡rio nunca criou local, ou se o ultimo local criado pelo usuario foi criado hÃ¡ mais tempo que o mÃ­nimo nas configuraÃ§Ãµes
+	//Se o usuário nunca criou local, ou se o ultimo local criado pelo usuario foi criado há mais tempo que o mínimo nas configurações
     if(!$ultimo_local || ($ultimo_local->minutos_ultimo_local > $configuracoes->t_local)){
 
         //Insere o novo local
@@ -224,7 +224,7 @@ function adicionaLocal()
 
         //Checkout no local anterior
 
-        //Verifica se hÃ¡ checkin corrente
+        //Verifica se há checkin corrente
 
         $sql = "SELECT id_checkin, id_local FROM CHECKIN WHERE id_usuario = :id_usuario AND dt_checkout IS NULL";
 
@@ -250,7 +250,7 @@ function adicionaLocal()
 
         $checkin = $stmt->fetch(PDO::FETCH_OBJ);
 
-        if($checkin){ //Se existe checkin prÃ©vio, faz o checkout
+        if($checkin){ //Se existe checkin prévio, faz o checkout
 
             $sql = "UPDATE CHECKIN SET dt_checkout = NOW() WHERE id_checkin = :id_checkin";
 
@@ -294,7 +294,7 @@ function adicionaLocal()
                     //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
             }
             
-            //Expira todos os likes dados pelo usuÃ¡rio
+            //Expira todos os likes dados pelo usuário
 
             $sql = "UPDATE LIKES SET dt_expiracao = NOW() WHERE id_usuario1 = :id_usuario AND dt_expiracao IS NULL";
 
@@ -424,7 +424,7 @@ function adicionaCheckin()
 	$request = \Slim\Slim::getInstance()->request();
 	$checkin = json_decode($request->getBody());
 
-	//Verifica se o usuÃ¡rio jÃ¡ tem algum checkin corrente
+	//Verifica se o usuário já tem algum checkin corrente
 	$sql = "SELECT id_checkin, id_local, TIME_TO_SEC(TIMEDIFF(NOW(),dt_checkin))/60 as minutos_ultimo_checkin FROM CHECKIN WHERE id_usuario = :id_usuario AND dt_checkout IS NULL";
 	try{
 		$conn = getConn();
@@ -446,7 +446,7 @@ function adicionaCheckin()
 	
 	$checkin_vigente = $stmt->fetch(PDO::FETCH_OBJ);
 	
-	if($checkin_vigente){		//Se hÃ¡ checkin vigente para o usuÃ¡rio
+	if($checkin_vigente){		//Se há checkin vigente para o usuário
 	
 		//retorna checkin_vigente = 1, o id e o local do checkin vigente
 			
@@ -454,7 +454,7 @@ function adicionaCheckin()
 		$checkin->id_checkin_anterior = $checkin_vigente->id_checkin;
 		$checkin->id_local_anterior = $checkin_vigente->id_local;
 	
-		// Verifica se o Ãºltimo checkin foi realizado fora do tempo mÃ­nimo (valor setado na variavel global).
+		// Verifica se o Ãºltimo checkin foi realizado fora do tempo mínimo (valor setado na variavel global).
 		
 		$configuracoes = verificaConfiguracoes();
                 
@@ -498,7 +498,7 @@ function adicionaCheckin()
                             //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 			}
                         
-                        //Expira todos os likes dados pelo usuÃ¡rio
+                        //Expira todos os likes dados pelo usuário
 
                         $sql = "UPDATE LIKES SET dt_expiracao = NOW() WHERE id_usuario1 = :id_usuario AND dt_expiracao IS NULL";
 
@@ -519,7 +519,7 @@ function adicionaCheckin()
                             die();
                         }
 		}
-		// Se o ultimo checkin foi realizado hÃ¡ menos de 5 minutos, retorna mensagem de erro.
+		// Se o ultimo checkin foi realizado há menos de 5 minutos, retorna mensagem de erro.
 		else{
                         //ERRO 516
                         //MENSAGEM: Checkin anterior em menos de 5 minutos.
@@ -531,7 +531,7 @@ function adicionaCheckin()
 
 		}
 	}
-	else{ //Se o usuÃ¡rio nÃ£o tem checkin vigente
+	else{ //Se o usuário nÃ£o tem checkin vigente
 		$checkin->checkin_vigente = "0";
 	}
 	
@@ -597,7 +597,7 @@ function adicionaLike()
     $request = \Slim\Slim::getInstance()->request();
     $like = json_decode($request->getBody());
 
-    //Verifica se o usuÃ¡rio destino do like ainda tem um checkin vÃ¡lido
+    //Verifica se o usuário destino do like ainda tem um checkin válido
 
     $sql = "SELECT 1 FROM CHECKIN WHERE id_usuario = :id_usuario2 AND id_local = :id_local AND DT_CHECKOUT IS NULL";
     try{
@@ -620,7 +620,7 @@ function adicionaLike()
         //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
     }
 
-    //Se o usuÃ¡rio de destino fez o checkout
+    //Se o usuário de destino fez o checkout
     if(!$stmt->fetchObject()){ 
 
         //ERRO 522
@@ -634,9 +634,9 @@ function adicionaLike()
         //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 
     }
-    else{ //Se o checkin do usuÃ¡rio destino ainda Ã© vÃ¡lido
+    else{ //Se o checkin do usuário destino ainda é válido
 	
-        //Verifica se o usuÃ¡rio jÃ¡ foi curtido ou nÃ£o
+        //Verifica se o usuário já foi curtido ou nÃ£o
 
         $sql = "SELECT id_like FROM LIKES WHERE id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2 AND dt_expiracao IS NULL";
         try{
@@ -661,10 +661,10 @@ function adicionaLike()
 
         }
 
-        //Se jÃ¡ nÃ£o existe like vÃ¡lido
+        //Se já nÃ£o existe like válido
         if(!$like_existente){
 
-            //DÃ¡ o like
+            //Dá o like
 
             $sql = "INSERT INTO LIKES (id_usuario1, id_usuario2, id_local, dt_like) VALUES (:id_usuario1, :id_usuario2, :id_local, NOW())";
             try{
@@ -691,7 +691,7 @@ function adicionaLike()
 
             //Verifica se houve o match
 
-            //Verifica se o outro usuÃ¡rio jÃ¡ deu o like tambÃ©m, e se o mesmo ainda Ã© vÃ¡lido
+            //Verifica se o outro usuário já deu o like também, e se o mesmo ainda é válido
             try{
                     $sql = "SELECT 1 FROM LIKES WHERE id_usuario1 = :id_usuario2 AND id_usuario2 = :id_usuario1 AND DT_EXPIRACAO IS NULL"; 
                     $stmt = $conn->prepare($sql);
@@ -720,7 +720,7 @@ function adicionaLike()
 
                     /*
 					
-					// Busca os IDs do QB dos usuÃ¡rios
+					// Busca os IDs do QB dos usuários
 
                     try{
                     $sql = "SELECT id_qb FROM USUARIO WHERE id_usuario = :id_usuario1";
@@ -764,7 +764,7 @@ function adicionaLike()
 
                     //######## CHAT ########//
 
-                    // Por algum motivo obscuro o QB se perde caso mandemos uma requisiÃ§Ã£o de um chat jÃ¡ existente, mas com os IDs na ordem inversa. Desta forma, mandamos sempre na mesma ordem.
+                    // Por algum motivo obscuro o QB se perde caso mandemos uma requisição de um chat já existente, mas com os IDs na ordem inversa. Desta forma, mandamos sempre na mesma ordem.
 
                     if($usuario1->id_qb > $usuario2->id_qb)
                             $dados_chat = array( "type" => 3, "name" => "", "occupants_ids" => $usuario1->id_qb . "," . $usuario2->id_qb);
@@ -840,7 +840,7 @@ function adicionaLike()
             $like->id_output = "1";
             $like->desc_output = "Like realizado com sucesso.";
 
-        //Se jÃ¡ hÃ¡ o like vÃ¡lido, dÃ¡ deslike
+        //Se já há o like válido, dá deslike
         }
         else{
 
@@ -904,10 +904,10 @@ function loginUsuario()
         die();
     }
 
-    //Se o usuÃ¡rio foi encontrado
+    //Se o usuário foi encontrado
     if($registro_usuario){
 
-        //Verificando se usuario foi bloqueado logicamente atravÃ©s do preenchimento do campo DT_BLOQUEIO
+        //Verificando se usuario foi bloqueado logicamente através do preenchimento do campo DT_BLOQUEIO
         if($registro_usuario->dt_bloqueio != null){
 
             //ERRO 501
@@ -920,7 +920,7 @@ function loginUsuario()
 
         } 
         else{
-            if($registro_usuario->dt_exclusao != null){ //Verificando se usuario foi excluÃ­do logicamente atravÃ©s do preenchimento do campo DT_EXCLUSAO
+            if($registro_usuario->dt_exclusao != null){ //Verificando se usuario foi excluído logicamente através do preenchimento do campo DT_EXCLUSAO
 
                 //Seta NULL no campo DT_EXCLUSAO, pois o usuario deseja retornar ao aplicativo
 
@@ -947,10 +947,10 @@ function loginUsuario()
             
             $usuario->aniversario_usuario = date("Y-m-d", strtotime($usuario->aniversario_usuario));
 			
-            //Verifica se houve alteraÃ§Ã£o das informaÃ§Ãµes pessoais
+            //Verifica se houve alteração das informações pessoais
 
             if($registro_usuario->nome != $usuario->nome_usuario || $registro_usuario->sobrenome != $usuario->sobrenome_usuario || $registro_usuario->sexo != $usuario->sexo_usuario || $registro_usuario->email != $usuario->email_usuario || $registro_usuario->aniversario != $usuario->aniversario_usuario || $registro_usuario->cidade != $usuario->cidade_usuario || $registro_usuario->pais != $usuario->pais_usuario || $registro_usuario->idioma != $usuario->idioma_usuario){
-            //Se houve alteraÃ§Ã£o em algum dos dados, atualiza o registro do usuÃ¡rio na base do Onrange
+            //Se houve alteração em algum dos dados, atualiza o registro do usuário na base do Onrange
 
                 $sql = "UPDATE USUARIO SET nome = :nome_usuario, sobrenome = :sobrenome_usuario, sexo = :sexo_usuario, email = :email_usuario, aniversario = :aniversario_usuario, cidade = :cidade_usuario, pais = :pais_usuario, idioma = :idioma_usuario WHERE id_usuario = :id_usuario";
                 try{
@@ -979,7 +979,7 @@ function loginUsuario()
 
                 }
             }
-            //Login realizado com sucesso. Retorna o objeto com os dados do usuÃ¡rio
+            //Login realizado com sucesso. Retorna o objeto com os dados do usuário
 
             $usuario->id_usuario = $registro_usuario->id_usuario;
             $usuario->quickblox_usuario = $registro_usuario->quickblox_usuario;
@@ -1105,7 +1105,7 @@ function fazCheckout()
 
     $existe_checkin = $stmt->fetch(PDO::FETCH_OBJ);
 
-    //Verifica se existe checkin corrente para o usuÃ¡rio. Se sim, faz o checkout.
+    //Verifica se existe checkin corrente para o usuário. Se sim, faz o checkout.
 
     if($existe_checkin){
 
@@ -1148,7 +1148,7 @@ function fazCheckout()
             die();
         }
 
-        //Expira todos os likes dados pelo usuÃ¡rio
+        //Expira todos os likes dados pelo usuário
 
         $sql = "UPDATE LIKES SET dt_expiracao = NOW() WHERE id_usuario1 = :id_usuario AND dt_expiracao IS NULL";
 
@@ -1284,7 +1284,6 @@ function unMatch()
     $request = \Slim\Slim::getInstance()->request();
     $unmatch = json_decode($request->getBody());
     
-    /*
     try{
         
         $unmatch->apaga_chat = CallAPIQB("DELETE","https://api.quickblox.com/chat/Dialog/" . $unmatch->id_chat . ".json","","QB-Token: " . $unmatch->qbtoken);
@@ -1300,9 +1299,8 @@ function unMatch()
         die();
     }
     
-     * 
-     */
-    
+
+    /*
     $sql = "SELECT id_usuario FROM USUARIO
             WHERE id_facebook = :id_facebook_usuario";
 
@@ -1392,15 +1390,17 @@ function unMatch()
         die();
     }
     
+    */
+    
     $unmatch->id_output = 1;
-    $unmatch->desc_output = "DescombinaÃ§Ã£o realizada.";
+    $unmatch->desc_output = "Descombinação realizada.";
     
     echo json_encode($unmatch);
     
     $conn = null;
 }
 
-//FunÃ§Ãµes que chamam a Interface
+//Funções que chamam a Interface
 function listaTodosUsuariosQuickblox()
 {
 	$request = \Slim\Slim::getInstance()->request();
@@ -1451,7 +1451,7 @@ function CallAPIQB($method, $url, $data, $qbtoken)
     
     curl_setopt($curl, CURLOPT_HTTPHEADER, array($qbtoken));
 
-    //AutenticaÃ§Ã£o se necessÃ¡rio:
+    //Autenticação se necessário:
     curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
     curl_setopt($curl, CURLOPT_USERPWD, "username:password");
 
@@ -1631,7 +1631,7 @@ function adicionaPromoCheckin()
     $request = \Slim\Slim::getInstance()->request();
     $promo_usuario = json_decode($request->getBody());
 
-    //Verifica se ainda hÃ¡ lote disponÃ­vel para o promo
+    //Verifica se ainda há lote disponível para o promo
 
     $sql = "SELECT id_codigo_promo FROM PROMO_USUARIO_CODIGO"
             . " WHERE id_promo = :id_promo AND dt_utilizacao IS NULL"
@@ -1659,9 +1659,9 @@ function adicionaPromoCheckin()
 
     $codigo_disponivel = $stmt->fetch(PDO::FETCH_OBJ);
 
-    if($codigo_disponivel){ //Se existe cÃ³digo disponÃ­vel
+    if($codigo_disponivel){ //Se existe código disponível
 
-        //Insere na tabela de promoÃ§Ãµes e usuÃ¡rios
+        //Insere na tabela de promoções e usuários
 
         $sql = "INSERT INTO PROMO_USUARIO (id_usuario, id_codigo_promo) VALUES (:id_usuario, :id_codigo_promo)";
         try{
@@ -1688,7 +1688,7 @@ function adicionaPromoCheckin()
             //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
         }
 
-        //Marca o cÃ³digo como utilizado
+        //Marca o código como utilizado
 
         $sql = "UPDATE PROMO_USUARIO_CODIGO SET dt_utilizacao = NOW() 
                 WHERE id_codigo_promo = :id_codigo_promo";
