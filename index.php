@@ -1427,7 +1427,9 @@ function listaTodosUsuariosQuickblox()
 //Interface com API QuickBlox
 function CallAPIQB($method, $url, $data, $qbtoken)
 {
-    header('Content-Type: application/json');
+	header('Content-Type: application/json');
+	header('QB-Token: '. $qbtoken);
+	
     $curl = curl_init();
 
     switch ($method)
