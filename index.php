@@ -88,6 +88,23 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 					) AS FirstCut 
 				WHERE acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 <= :range
 				ORDER BY qt_checkin DESC";
+    }elseif($order_by=="topcheckin"){
+    	$sql = "SELECT id_local, nome, latitude, longitude,
+				acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
+				qt_checkin, id_tipo_local AS tipo_local, destaque
+				FROM (
+					SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, LOCAL.destaque
+					FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
+					WHERE
+					CHECKINS_CORRENTES.qt_checkin > 0
+					AND LOCAL.dt_exclusao IS NULL
+					AND LOCAL.latitude BETWEEN :minLat AND :maxLat
+					AND LOCAL.longitude Between :minLong AND :maxLong
+					GROUP BY LOCAL.id_local
+					) AS FirstCut
+				WHERE acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 <= :range
+				ORDER BY qt_checkin DESC
+    			LIMIT 20";
     }else{
 		$sql = "SELECT id_local, nome, latitude, longitude, 
 				acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
