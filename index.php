@@ -1301,6 +1301,14 @@ function unMatch()
     $request = \Slim\Slim::getInstance()->request();
     $unmatch = json_decode($request->getBody());
     
+    $FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/parametros'.date('Y-m-d').".txt";
+    $FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+    
+    $PARAMETROS .= "id_chat: {$unmatch->id_chat}\r\n";
+    $PARAMETROS .= "qbtoken: {$unmatch->qbtoken}\r\n";
+    fwrite($FILE_LOG, $PARAMETROS);
+    fclose($FILE_LOG);
+    
     try{
         
         $unmatch->apaga_chat = CallAPIQB("DELETE","https://api.quickblox.com/chat/Dialog/" . $unmatch->id_chat . ".json","","QB-Token: " . $unmatch->qbtoken);
@@ -1447,6 +1455,9 @@ function CallAPIQB($method, $url, $data, $qbtoken)
 	header('Content-Type: application/json');
 	header('QB-Token: '. $qbtoken);
 	
+	$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/'.date('Y-m-d').".txt";
+	$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	
     $curl = curl_init();
 
     switch ($method)
@@ -1470,14 +1481,27 @@ function CallAPIQB($method, $url, $data, $qbtoken)
     
     curl_setopt($curl, CURLOPT_HTTPHEADER, array($qbtoken));
 
-    //Autenticacao se necessario:
-    curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-    curl_setopt($curl, CURLOPT_USERPWD, "username:password");
-
     curl_setopt($curl, CURLOPT_URL, $url);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-
-    return curl_exec($curl);
+    curl_setopt($curl, CURLOPT_TIMEOUT, 40);
+    curl_setopt($curl, CURLOPT_VERBOSE, 1);
+    curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG);
+    
+    $PARAMETROS .= "Method: {$method}\r\n";
+    $PARAMETROS .= "URL: {$url}\r\n";
+    $PARAMETROS .= "{$qbtoken}\r\n\r\n";
+     
+    fwrite($FILE_LOG, $PARAMETROS);
+    
+    $response = curl_exec($curl);
+    
+    $LOG_TXT .= "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+    
+    fwrite($FILE_LOG, $LOG_TXT);
+    
+    fclose($FILE_LOG);
+    
+    return $response;
 }
 
 function apagaUsuario()
