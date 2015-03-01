@@ -15,7 +15,6 @@ $app->get('/promo/listaPromosUsuario/:id_usuario','listaPromosUsuario'); //traz 
 $app->get('/promo/verificapromolocal/:id_local','verificaPromoLocal'); //retorna o id do promo referente ao Local, caso exista
 $app->get('/promo/verificapromosnaolidos/:id_usuario','verificaPromosNaoLidos'); //retorna 1 caso haja promos nao lidos na caixa de entrada, caso contrario retorna 0
 $app->get('/configuracao/verificaconfiguracoes','verificaConfiguracoes'); //seta variaveis globais com configuracoes a serem usadas pelo app
-$app->get('/promo/adicionapromocheckin/:id_promo/:id_usuario','adicionaPromoCheckin'); //adiciona à caixa de entrada um Promo relacionado ao checkin do Usuario
 
 //POST METHODS
 $app->post('/local/adicionalocal','adicionaLocal'); //cria novo local
@@ -23,6 +22,7 @@ $app->post('/usuario/adicionausuario','adicionaUsuario'); //cria novo usuario
 $app->post('/checkin/adicionacheckin','adicionaCheckin'); //faz checkin
 $app->post('/like/adicionalike','adicionaLike'); //da like em alguem, em algum local
 $app->post('/usuario/login','loginUsuario'); //faz login de usuario
+$app->post('/promo/adicionapromocheckin','adicionaPromoCheckin'); //adiciona à caixa de entrada um Promo relacionado ao checkin do Usuario
 $app->post('/erro/adicionaerroqb','adicionaErroQB'); //no caso de um erro no cadastro do usuario no QB, adiciona este registro à tabela
 
 //PUT METHODS
@@ -39,7 +39,7 @@ $app->run();
 
 function getConn()
 {
-	return new PDO('mysql:host=mysql.hostinger.com.br;dbname=u138894269_onrng','u138894269_onrng','onrange8375',
+	return new PDO('mysql:host=localhost;dbname=onrange-homologacao','root','0nr4ng364638375m1r0',
 	array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8", PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
 }
 
@@ -536,7 +536,7 @@ function adicionaCheckin()
                             die();
                         }
 		}
-		// Se o ultimo checkin foi realizado ha menos de X minutos, retorna mensagem de erro.
+		// Se o ultimo checkin foi realizado ha menos de 5 minutos, retorna mensagem de erro.
 		else{
                         //ERRO 516
                         //MENSAGEM: Checkin anterior em menos de 5 minutos.
@@ -601,38 +601,8 @@ function adicionaCheckin()
 	$checkin->id_output = "1";
 	$checkin->desc_output = "Checkin realizado com sucesso.";
         
-    $checkin->t_checkin = $app->t_checkin;
-    
-    // Verifica se o local possui checkin premiado, e em caso positivo adiciona o promo à caixa de entrada do usuário
-    
-    $sql = "SELECT id_promo FROM PROMO 
-    		WHERE id_local = :id_local 
-    		AND promo_checkin = 1
-    		AND NOW() BETWEEN dt_disponibilizacao AND dt_fim";
-    try{
-    	$stmt = $conn->prepare($sql);
-    	$stmt->bindParam("id_local",$checkin->id_local);
-    	$stmt->execute();
-    	
-    	$promo_checkin = $stmt->fetch(PDO::FETCH_OBJ);
-    	
-    } catch(PDOException $e){
-    
-    	//ERRO 561
-    	//MENSAGEM: Erro ao buscar promos de checkin
-    
-    	header('Ed-Return-Message: Erro ao buscar promos de checkin', true, 561);
-    	echo '[]';
-    
-    	die();
-    
-    	//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-    }
-    
-    if($promo_checkin){
-        adicionaPromoCheckin($promo_checkin->id_promo,$checkin->id_usuario);
-    }
-    		
+        $checkin->t_checkin = $app->t_checkin;
+	
 	echo json_encode($checkin);
 	
 	$conn = null;
@@ -930,7 +900,7 @@ function loginUsuario()
 
     //Verifica dados
 
-    $sql = "SELECT id_usuario, id_facebook AS facebook_usuario, id_qb AS quickblox_usuario, nome AS nome_usuario, sobrenome AS sobrenome_usuario, sexo AS sexo_usuario, dt_usuario, dt_exclusao, dt_bloqueio, email AS email_usuario, cidade AS cidade_usuario, pais AS pais_usuario, idioma AS idioma_usuario
+    $sql = "SELECT id_usuario, id_facebook AS facebook_usuario, id_qb AS quickblox_usuario, nome AS nome_usuario, sobrenome AS sobrenome_usuario, sexo AS sexo_usuario, dt_usuario, dt_exclusao, dt_bloqueio, email AS email_usuario, aniversario AS aniversario_usuario, cidade AS cidade_usuario, pais AS pais_usuario, idioma AS idioma_usuario
             FROM USUARIO WHERE id_facebook = :id_facebook";
     try{
         $conn = getConn();
@@ -996,7 +966,7 @@ function loginUsuario()
 			
             //Verifica se houve alteracao das informacoes pessoais
 
-            if($registro_usuario->nome != $usuario->nome_usuario || $registro_usuario->sobrenome != $usuario->sobrenome_usuario || $registro_usuario->sexo != $usuario->sexo_usuario || $registro_usuario->email != $usuario->email_usuario || $registro_usuario->aniversario != $usuario->aniversario_usuario || $registro_usuario->cidade != $usuario->cidade_usuario || $registro_usuario->pais != $usuario->pais_usuario || $registro_usuario->idioma != $usuario->idioma_usuario){
+            if($registro_usuario->nome_usuario != $usuario->nome_usuario || $registro_usuario->sobrenome_usuario != $usuario->sobrenome_usuario || $registro_usuario->sexo_usuario != $usuario->sexo_usuario || $registro_usuario->email_usuario != $usuario->email_usuario || $registro_usuario->aniversario_usuario != $usuario->aniversario_usuario || $registro_usuario->cidade_usuario != $usuario->cidade_usuario || $registro_usuario->pais_usuario != $usuario->pais_usuario || $registro_usuario->idioma_usuario != $usuario->idioma_usuario){
             //Se houve alteracao em algum dos dados, atualiza o registro do usuario na base do Onrange
 
                 $sql = "UPDATE USUARIO SET nome = :nome_usuario, sobrenome = :sobrenome_usuario, sexo = :sexo_usuario, email = :email_usuario, aniversario = :aniversario_usuario, cidade = :cidade_usuario, pais = :pais_usuario, idioma = :idioma_usuario WHERE id_usuario = :id_usuario";
@@ -1580,12 +1550,12 @@ function apagaUsuario()
 function listaPromosUsuario($id_usuario)
 {
     $sql = "SELECT PROMO.id_promo, LOCAL.nome AS local, PROMO.nome, PROMO.descricao, PROMO.dt_inicio, PROMO.dt_fim, PROMO.lote, PROMO.dt_disponibilizacao, PROMO.dt_promo,
-            PROMO_CODIGO.codigo_promo, PROMO_CODIGO.id_promo_codigo, PROMO_CODIGO_USUARIO.dt_utilizacao, PROMO_CODIGO_USUARIO.dt_visualizacao
+            PROMO_USUARIO_CODIGO.codigo_promo, PROMO_USUARIO_CODIGO.id_codigo_promo, PROMO_USUARIO.dt_utilizacao, PROMO_USUARIO.dt_visualizacao
             FROM PROMO JOIN LOCAL ON PROMO.id_local = LOCAL.id_local
-                       JOIN PROMO_CODIGO ON PROMO.id_promo = PROMO_CODIGO.id_promo
-                       JOIN PROMO_CODIGO_USUARIO ON PROMO_CODIGO.id_promo_codigo = PROMO_CODIGO_USUARIO.id_promo_codigo
-            WHERE PROMO_CODIGO_USUARIO.id_usuario = :id_usuario
-                AND PROMO_CODIGO_USUARIO.dt_exclusao IS NULL
+                       JOIN PROMO_USUARIO_CODIGO ON PROMO.id_promo = PROMO_USUARIO_CODIGO.id_promo
+                       JOIN PROMO_USUARIO ON PROMO_USUARIO_CODIGO.id_codigo_promo = PROMO_USUARIO.id_codigo_promo
+            WHERE PROMO_USUARIO.id_usuario = :id_usuario
+                AND PROMO_USUARIO.dt_exclusao IS NULL
                     ORDER BY PROMO.dt_inicio DESC";
     try{
         $conn = getConn();
@@ -1616,13 +1586,13 @@ function marcaPromoVisualizado()
     $request = \Slim\Slim::getInstance()->request();
     $promo = json_decode($request->getBody());
 
-    $sql = "UPDATE PROMO_CODIGO_USUARIO SET dt_visualizacao = NOW() 
-            WHERE id_promo_codigo = :id_promo_codigo";
+    $sql = "UPDATE PROMO_USUARIO SET dt_visualizacao = NOW() 
+            WHERE id_codigo_promo = :id_codigo_promo";
 
     try{
         $conn = getConn();
         $stmt = $conn->prepare($sql);
-        $stmt->bindParam("id_promo_codigo",$promo->id_promo_codigo);
+        $stmt->bindParam("id_codigo_promo",$promo->id_codigo_promo);
         $stmt->execute();
 
     } catch(PDOException $e){
@@ -1659,7 +1629,7 @@ function apagaPromoUsuario()
     $request = \Slim\Slim::getInstance()->request();
     $promo = json_decode($request->getBody());
 
-    $sql = "UPDATE PROMO_CODIGO_USUARIO SET dt_exclusao = NOW() 
+    $sql = "UPDATE PROMO_USUARIO SET dt_exclusao = NOW() 
             WHERE id_promo = :id_promo
               AND id_usuario = :id_usuario";
 
@@ -1699,21 +1669,21 @@ function apagaPromoUsuario()
     $conn = null;
 }
 
-function adicionaPromoCheckin($id_promo,$id_usuario)
+function adicionaPromoCheckin()
 {
-    //$request = \Slim\Slim::getInstance()->request();
-    //$PROMO_CODIGO_USUARIO = json_decode($request->getBody());
+    $request = \Slim\Slim::getInstance()->request();
+    $promo_usuario = json_decode($request->getBody());
 
     //Verifica se ainda ha lote disponivel para o promo
 
-    $sql = "SELECT id_promo_codigo FROM PROMO_CODIGO"
+    $sql = "SELECT id_codigo_promo FROM PROMO_USUARIO_CODIGO"
             . " WHERE id_promo = :id_promo AND dt_utilizacao IS NULL"
             . " LIMIT 1";
 
     try{
         $conn = getConn();
         $stmt = $conn->prepare($sql);
-        $stmt->bindParam("id_promo",$id_promo);
+        $stmt->bindParam("id_promo",$promo_usuario->id_promo);
         $stmt->execute();
 
     } catch(PDOException $e){
@@ -1734,20 +1704,19 @@ function adicionaPromoCheckin($id_promo,$id_usuario)
 
     if($codigo_disponivel){ //Se existe codigo disponivel
 
-        //Insere na tabela de promocoes, codigos e usuarios
+        //Insere na tabela de promocoes e usuarios
 
-        $sql = "INSERT INTO PROMO_CODIGO_USUARIO (id_usuario, id_promo_codigo) VALUES (:id_usuario, :id_promo_codigo)";
+        $sql = "INSERT INTO PROMO_USUARIO (id_usuario, id_codigo_promo) VALUES (:id_usuario, :id_codigo_promo)";
         try{
                 $conn = getConn();
                 $stmt = $conn->prepare($sql);
-                $stmt->bindParam("id_usuario",$id_usuario);
-                $stmt->bindParam("id_promo_codigo",$codigo_disponivel->id_promo_codigo);
+                $stmt->bindParam("id_usuario",$promo_usuario->id_usuario);
+                $stmt->bindParam("id_codigo_promo",$codigo_disponivel->id_codigo_promo);
                 $stmt->execute();
-                
-                //$PROMO_CODIGO_USUARIO->id_promo_codigo_usuario = $conn->lastInsertId();
+                $promo_usuario->id_promo_usuario = $conn->lastInsertId();
 
-                //$PROMO_CODIGO_USUARIO->id_output = "1";
-                //$PROMO_CODIGO_USUARIO->desc_output = "Promo adicionado com sucesso.";
+                $promo_usuario->id_output = "1";
+                $promo_usuario->desc_output = "Promo adicionado com sucesso.";
 
         } catch(PDOException $e){
 
@@ -1764,13 +1733,13 @@ function adicionaPromoCheckin($id_promo,$id_usuario)
 
         //Marca o codigo como utilizado
 
-        $sql = "UPDATE PROMO_CODIGO SET dt_utilizacao = NOW() 
-                WHERE id_promo_codigo = :id_promo_codigo";
+        $sql = "UPDATE PROMO_USUARIO_CODIGO SET dt_utilizacao = NOW() 
+                WHERE id_codigo_promo = :id_codigo_promo";
 
         try{
             $conn = getConn();
             $stmt = $conn->prepare($sql);
-            $stmt->bindParam("id_promo_codigo",$codigo_disponivel->id_promo_codigo);
+            $stmt->bindParam("id_codigo_promo",$codigo_disponivel->id_codigo_promo);
             $stmt->execute();
 
         } catch(PDOException $e){
@@ -1807,13 +1776,10 @@ function adicionaPromoCheckin($id_promo,$id_usuario)
 
     }
 
-    //Retorna verdadeiro
 
-    return true;
-    
     // Retorna o objeto do Promo criado
-    
-    //echo json_encode($PROMO_CODIGO_USUARIO);
+
+    echo json_encode($promo_usuario);
 
     $conn = null;
 	
@@ -1856,7 +1822,7 @@ function verificaPromoLocal($id_local)
 
 function verificaPromosNaoLidos($id_usuario)
 {
-    $sql = "SELECT 1 from PROMO_CODIGO_USUARIO "
+    $sql = "SELECT 1 from PROMO_USUARIO "
             . "WHERE id_usuario = :id_usuario "
             . "AND dt_visualizacao IS NULL "
             . "LIMIT 1";
@@ -1887,6 +1853,7 @@ function verificaPromosNaoLidos($id_usuario)
     $conn = null;
 	
 }
+
 
 function verificaConfiguracoes()
 {
