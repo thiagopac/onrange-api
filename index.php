@@ -78,11 +78,11 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 				acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
 				qt_checkin, id_tipo_local AS tipo_local, destaque
 				FROM (
-					SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, CASE WHEN PROMO.promo_checkin IS NULL OR PROMO.promo_checkin = 0 THEN 0 ELSE 1 END AS destaque
+					SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, CASE WHEN PROMO.promo_checkin = 1 THEN 1 ELSE 0 END AS destaque
 					FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
-						 LEFT JOIN PROMO ON (LOCAL.id_local = PROMO.id_local AND NOW() between PROMO.dt_disponibilizacao AND PROMO.dt_fim)
+						 LEFT JOIN PROMO ON (LOCAL.id_local = PROMO.id_local AND PROMO.dt_fim_lote IS NULL AND NOW() between PROMO.dt_inicio AND PROMO.dt_fim)
 					WHERE
-					CHECKINS_CORRENTES.qt_checkin > 0
+					(CHECKINS_CORRENTES.qt_checkin > 0 OR PROMO.promo_checkin = 1)
 					AND LOCAL.dt_exclusao IS NULL
 					AND LOCAL.latitude BETWEEN :minLat AND :maxLat
 					AND LOCAL.longitude Between :minLong AND :maxLong
@@ -95,11 +95,11 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 				acos(sin(:latitude_atual)*sin(radians(latitude)) + cos(:latitude_atual)*cos(radians(latitude))*cos(radians(longitude)-:longitude_atual)) * 6371 As distancia,
 				qt_checkin, id_tipo_local AS tipo_local, destaque
 				FROM (
-					SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, CASE WHEN PROMO.promo_checkin IS NULL OR PROMO.promo_checkin = 0 THEN 0 ELSE 1 END AS destaque
+					SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, CASE WHEN PROMO.promo_checkin = 1 THEN 1 ELSE 0 END AS destaque
 					FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
-    					 LEFT JOIN PROMO ON (LOCAL.id_local = PROMO.id_local AND NOW() between PROMO.dt_disponibilizacao AND PROMO.dt_fim)
+    					 LEFT JOIN PROMO ON (LOCAL.id_local = PROMO.id_local AND PROMO.dt_fim_lote IS NULL AND NOW() between PROMO.dt_inicio AND PROMO.dt_fim)
 					WHERE
-					CHECKINS_CORRENTES.qt_checkin > 0
+					(CHECKINS_CORRENTES.qt_checkin > 0 OR PROMO.promo_checkin = 1)
 					AND LOCAL.dt_exclusao IS NULL
 					AND LOCAL.latitude BETWEEN :minLat AND :maxLat
 					AND LOCAL.longitude Between :minLong AND :maxLong
@@ -115,7 +115,7 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 				FROM (
 					SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CHECKINS_CORRENTES.qt_checkin, LOCAL.id_tipo_local, CASE WHEN PROMO.promo_checkin IS NULL OR PROMO.promo_checkin = 0 THEN 0 ELSE 1 END AS destaque
 					FROM LOCAL JOIN CHECKINS_CORRENTES ON LOCAL.id_local = CHECKINS_CORRENTES.id_local
-				         LEFT JOIN PROMO ON (LOCAL.id_local = PROMO.id_local AND NOW() between PROMO.dt_disponibilizacao AND PROMO.dt_fim)
+				         LEFT JOIN PROMO ON (LOCAL.id_local = PROMO.id_local AND PROMO.dt_fim_lote IS NULL AND NOW() between PROMO.dt_inicio AND PROMO.dt_fim)
 					WHERE
 					LOCAL.dt_exclusao IS NULL
 					AND LOCAL.latitude BETWEEN :minLat AND :maxLat
@@ -612,7 +612,7 @@ function adicionaCheckin()
     $sql = "SELECT id_promo FROM PROMO
     		WHERE id_local = :id_local 
     		  AND promo_checkin = 1
-    		  AND NOW() between dt_disponibilizacao AND dt_fim
+    		  AND NOW() between dt_inicio AND dt_fim
     		  AND :id_usuario NOT IN (SELECT id_usuario FROM PROMO_CODIGO_USUARIO WHERE PROMO_CODIGO_USUARIO.id_promo = PROMO.id_promo AND id_usuario IS NOT NULL)";
     try{
     	$stmt = $conn->prepare($sql);
@@ -1241,7 +1241,7 @@ function verificaCheckinUsuario($id_usuario)
 {
     $sql = "SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CASE WHEN PROMO.promo_checkin IS NULL OR PROMO.promo_checkin = 0 THEN 0 ELSE 1 END AS destaque
             FROM LOCAL JOIN CHECKIN ON LOCAL.ID_LOCAL = CHECKIN.ID_LOCAL
-    		     LEFT JOIN PROMO ON (LOCAL.id_local = PROMO.id_local AND NOW() between PROMO.dt_disponibilizacao AND PROMO.dt_fim)
+    		     LEFT JOIN PROMO ON (LOCAL.id_local = PROMO.id_local AND NOW() between PROMO.dt_inicio AND PROMO.dt_fim)
             WHERE CHECKIN.ID_USUARIO = :id_usuario
               AND CHECKIN.DT_CHECKOUT IS NULL";
     try{
@@ -1586,13 +1586,13 @@ function apagaUsuario()
 
 function listaPromosUsuario($id_usuario)
 {
-    $sql = "SELECT PROMO.id_promo, LOCAL.nome AS local, PROMO.nome, PROMO.descricao, PROMO.dt_disponibilizacao, PROMO.dt_fim, PROMO.lote, PROMO.dt_promo,
+    $sql = "SELECT PROMO.id_promo, LOCAL.nome AS local, PROMO.nome, PROMO.descricao, PROMO.dt_inicio, PROMO.dt_fim, PROMO.lote, PROMO.dt_promo,
             PROMO_CODIGO_USUARIO.promo_codigo AS codigo_promo, PROMO_CODIGO_USUARIO.id_promo_codigo_usuario AS id_codigo_promo, PROMO_CODIGO_USUARIO.dt_utilizacao, PROMO_CODIGO_USUARIO.dt_visualizacao
             FROM PROMO JOIN LOCAL ON PROMO.id_local = LOCAL.id_local
                        JOIN PROMO_CODIGO_USUARIO ON PROMO.id_promo = PROMO_CODIGO_USUARIO.id_promo
             WHERE PROMO_CODIGO_USUARIO.id_usuario = :id_usuario
                 AND PROMO_CODIGO_USUARIO.dt_exclusao IS NULL
-                    ORDER BY PROMO.dt_disponibilizacao DESC";
+                    ORDER BY PROMO.dt_inicio DESC";
     try{
         $conn = getConn();
         $stmt = $conn->prepare($sql);
@@ -1789,7 +1789,7 @@ function adicionaPromoCheckin($id_promo,$id_usuario)
         
         if($retorno && $codigo_disponivel->qtd_codigos <= 1){
         	 
-        	$sql = "UPDATE PROMO SET dt_fim = NOW()
+        	$sql = "UPDATE PROMO SET dt_fim_lote = NOW()
         	        WHERE id_promo = $id_promo";
         	 
         	try{
@@ -1833,8 +1833,9 @@ function verificaPromoLocal($id_local)
     $sql = "SELECT id_promo, nome, descricao 
             FROM PROMO
             WHERE PROMO.id_local = :id_local
-              AND NOW() BETWEEN dt_disponibilizacao AND dt_fim
-              AND promo_checkin = 1";
+              AND NOW() BETWEEN dt_inicio AND dt_fim
+              AND promo_checkin = 1
+    		  AND dt_fim_lote IS NULL";
     try{
         $conn = getConn();
         $stmt = $conn->prepare($sql);
