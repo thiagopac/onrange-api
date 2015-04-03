@@ -273,7 +273,7 @@ function adicionaLocal()
 
         if($checkin){ //Se existe checkin previo, faz o checkout
 
-            $sql = "UPDATE CHECKIN SET dt_checkout = NOW() WHERE id_checkin = :id_checkin";
+            $sql = "UPDATE CHECKIN SET dt_checkout = NOW(), id_tipo_checkout = 3 WHERE id_checkin = :id_checkin";
 
             try{
                     $stmt = $conn->prepare($sql);
@@ -483,7 +483,7 @@ function adicionaCheckin()
 		
 			// Faz o checkout no local anterior
 			
-			$sql = "UPDATE CHECKIN SET dt_checkout = NOW() WHERE id_checkin = :id_checkin";
+			$sql = "UPDATE CHECKIN SET dt_checkout = NOW(), id_tipo_checkout = 3 WHERE id_checkin = :id_checkin";
 			try{
 			$stmt = $conn->prepare($sql);
 			$stmt->bindParam("id_checkin",$checkin_vigente->id_checkin);
@@ -1162,7 +1162,7 @@ function fazCheckout()
 
     if($existe_checkin){
 
-        $sql = "UPDATE CHECKIN SET dt_checkout = NOW() WHERE id_checkin = :id_checkin";
+        $sql = "UPDATE CHECKIN SET dt_checkout = NOW(), id_tipo_checkout = 1 WHERE id_checkin = :id_checkin";
 
         try{
                 $stmt = $conn->prepare($sql);
