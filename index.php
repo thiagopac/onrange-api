@@ -1173,6 +1173,8 @@ function fazCheckout()
 
             //ERRO 533
             //MENSAGEM: Erro ao fazer checkout
+            
+        	//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 
             header('Ed-Return-Message: Erro ao fazer checkout', true, 533);	
             echo '[]';
