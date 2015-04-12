@@ -1751,7 +1751,7 @@ function adicionaPromoCheckin($id_promo,$id_usuario)
 
         //Atualiza a tabela de promocoes, codigos e usuarios
 
-        $sql = "UPDATE PROMO_CODIGO_USUARIO SET id_usuario = $id_usuario 
+        $sql = "UPDATE PROMO_CODIGO_USUARIO SET id_usuario = $id_usuario, dt_usuario = NOW()  
                 WHERE id_promo_codigo_usuario = :id_promo_codigo_usuario";
         
         try{
