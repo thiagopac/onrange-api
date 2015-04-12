@@ -1594,7 +1594,7 @@ function listaPromosUsuario($id_usuario)
                        JOIN PROMO_CODIGO_USUARIO ON PROMO.id_promo = PROMO_CODIGO_USUARIO.id_promo
             WHERE PROMO_CODIGO_USUARIO.id_usuario = :id_usuario
                 AND PROMO_CODIGO_USUARIO.dt_exclusao IS NULL
-                    ORDER BY PROMO.dt_inicio DESC";
+                    ORDER BY PROMO.dt_usuario DESC";
     try{
         $conn = getConn();
         $stmt = $conn->prepare($sql);
