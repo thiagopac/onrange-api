@@ -1589,7 +1589,7 @@ function apagaUsuario()
 function listaPromosUsuario($id_usuario)
 {
     $sql = "SELECT PROMO.id_promo, LOCAL.nome AS local, PROMO.nome, PROMO.descricao, PROMO.dt_inicio, PROMO.dt_fim, PROMO.lote, PROMO.dt_promo,
-            PROMO_CODIGO_USUARIO.promo_codigo AS codigo_promo, PROMO_CODIGO_USUARIO.id_promo_codigo_usuario AS id_codigo_promo, PROMO_CODIGO_USUARIO.dt_utilizacao, PROMO_CODIGO_USUARIO.dt_visualizacao
+            PROMO_CODIGO_USUARIO.promo_codigo AS codigo_promo, PROMO_CODIGO_USUARIO.id_promo_codigo_usuario AS id_codigo_promo, PROMO_CODIGO_USUARIO.dt_utilizacao, PROMO_CODIGO_USUARIO.dt_visualizacao, PROMO_CODIGO_USUARIO.dt_usuario 
             FROM PROMO JOIN LOCAL ON PROMO.id_local = LOCAL.id_local
                        JOIN PROMO_CODIGO_USUARIO ON PROMO.id_promo = PROMO_CODIGO_USUARIO.id_promo
             WHERE PROMO_CODIGO_USUARIO.id_usuario = :id_usuario
