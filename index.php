@@ -998,7 +998,9 @@ function loginUsuario()
             
             //Adequa data de nascimento
             
-            $usuario->aniversario_usuario = date("Y-m-d", strtotime($usuario->aniversario_usuario));
+            $aniversario_usuario = date("Y-m-d", strtotime($registro_usuario->aniversario_usuario));
+            
+            $usuario->aniversario_usuario = $aniversario_usuario;
 			
             //Verifica se houve alteracao das informacoes pessoais
 
