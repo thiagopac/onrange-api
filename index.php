@@ -820,7 +820,8 @@ function adicionaLike()
                     //######## CHAT ########//
                     
                     try{
-                    	ApiAppAndUserSessionCreate($usuario1->id_facebook, $usuario2->id_facebook);
+                    	//segue com a API com o fluxo para criar chat
+                    	ApiAppAndUserSessionCreate($usuario1->id_facebook, $usuario2->id_facebook, "DIALOG_CREATE", null);
                     } catch(PDOException $e){
 
                         //ERRO 543
@@ -1338,14 +1339,15 @@ function unMatch()
     $FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/parametros'.date('Y-m-d').".txt";
     //$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
     
-    $PARAMETROS .= "id_chat: {$unmatch->id_chat}\r\n";
-    $PARAMETROS .= "qbtoken: {$unmatch->qbtoken}\r\n";
+    //$PARAMETROS .= "id_chat: {$unmatch->id_chat}\r\n";
+    //$PARAMETROS .= "qbtoken: {$unmatch->qbtoken}\r\n";
     //fwrite($FILE_LOG, $PARAMETROS);
     //fclose($FILE_LOG);
     
     try{
-        
-        $unmatch->apaga_chat = CallAPIQB("DELETE","https://api.quickblox.com/chat/Dialog/" . $unmatch->id_chat . ".json","","QB-Token: " . $unmatch->qbtoken);
+        ApiAppAndUserSessionCreate($unmatch->facebook_usuario, null, "DIALOG_DELETE", $unmatch->id_chat);
+        ApiAppAndUserSessionCreate($unmatch->facebook_usuario2, null, "DIALOG_DELETE", $unmatch->id_chat);
+        //$unmatch->apaga_chat = CallAPIQB("DELETE","https://api.quickblox.com/chat/Dialog/" . $unmatch->id_chat . ".json","","QB-Token: " . $unmatch->qbtoken);
             
     } catch(PDOException $e){
 
@@ -1489,9 +1491,9 @@ function ApiAppSessionCreate($facebook_usuario, $email, $nome)
 	require 'config.php';
 
 	// Credenciais do aplicativo
-	DEFINE('APPLICATION_ID', 10625);
-	DEFINE('AUTH_KEY', "rrTrFYFOECqjTAe");
-	DEFINE('AUTH_SECRET', "hM5vAmpBYYGV-p5");
+	$APPLICATION_ID = 10625;
+	$AUTH_KEY = "rrTrFYFOECqjTAe";
+	$AUTH_SECRET = "hM5vAmpBYYGV-p5";
 
 	// API endpoint
 	$QB_API_ENDPOINT = "https://api.quickblox.com";
@@ -1506,21 +1508,21 @@ function ApiAppSessionCreate($facebook_usuario, $email, $nome)
 	// Gerando a assinatura
 	$nonce = rand();
 	$timestamp = time();
-	$signature_string = "application_id=".APPLICATION_ID."&auth_key=".AUTH_KEY."&nonce=".$nonce."&timestamp=".$timestamp;
+	$signature_string = "application_id=".$APPLICATION_ID."&auth_key=".$AUTH_KEY."&nonce=".$nonce."&timestamp=".$timestamp;
 
 	//echo "stringForSignature: " . $signature_string . "<br><br>";
-	$signature = hash_hmac('sha1', $signature_string , AUTH_SECRET);
+	$signature = hash_hmac('sha1', $signature_string , $AUTH_SECRET);
 
 	// Criando corpo da requisição
 	$post_body = http_build_query(array(
-			'application_id' => APPLICATION_ID,
-			'auth_key' => AUTH_KEY,
+			'application_id' => $APPLICATION_ID,
+			'auth_key' => $AUTH_KEY,
 			'timestamp' => $timestamp,
 			'nonce' => $nonce,
 			'signature' => $signature
 	));
 
-	// $post_body = "application_id=" . APPLICATION_ID . "&auth_key=" . AUTH_KEY . "&timestamp=" . $timestamp . "&nonce=" . $nonce . "&signature=" . $signature;
+	// $post_body = "application_id=" . $APPLICATION_ID . "&auth_key=" . $AUTH_KEY . "&timestamp=" . $timestamp . "&nonce=" . $nonce . "&signature=" . $signature;
 
 	//echo "postBody: " . $post_body . "<br><br>";
 	// Configurando cURL
@@ -1576,22 +1578,28 @@ function ApiAppSessionCreate($facebook_usuario, $email, $nome)
 }
 
 //Cria sessão do aplicativo e também de um usuário já existente. Serve para tarefas onde é necessário já ter usuário no QB.
-function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2)
+function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2, $action, $chat)
 {
+	
+/*  -------------------  IMPORTANTE --------------------------
+
+ $action é um parâmetro que define qual fluxo a API irá tomar, abaixo devem ser listado os actions criados para serem usados na API
+
+ Lista dos possíveis actions (favor listar abaixo um novo action se for criado com seu fluxo)
+
+ - DIALOG_CREATE (este action é para o fluxo criar um novo chat. Ele segue para ApiUserRetrieve, para descobrir o ID_QB do outro usuário e depois para ApiDialogMessageSend que cria novo chat enviando uma mensagem
+ - DIALOG_DELETE (este action é para o fluxo apagar um chat. Ele segue para ApiDialogDelete e apaga o chat para o usuário 
+
+*/
 	
 	require 'config.php';
 	
 	// Credenciais do aplicativo
-	DEFINE('APPLICATION_ID', 10625);
-	DEFINE('AUTH_KEY', "rrTrFYFOECqjTAe");
-	DEFINE('AUTH_SECRET', "hM5vAmpBYYGV-p5");
+	$APPLICATION_ID = 10625;
+	$AUTH_KEY = "rrTrFYFOECqjTAe";
+	$AUTH_SECRET = "hM5vAmpBYYGV-p5";
 
 	$user = $facebook_usuario1;
-
-	// Credenciais de usuário do aplicativo
-	DEFINE('USER_LOGIN', $user);
-	DEFINE('USER_PASSWORD', $user);
-
 
 	// API endpoint
 	$QB_API_ENDPOINT = "https://api.quickblox.com";
@@ -1606,23 +1614,23 @@ function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2)
 	// Gerando a assinatura
 	$nonce = rand();
 	$timestamp = time();
-	$signature_string = "application_id=".APPLICATION_ID."&auth_key=".AUTH_KEY."&nonce=".$nonce."&timestamp=".$timestamp."&user[login]=".USER_LOGIN."&user[password]=".USER_PASSWORD;
+	$signature_string = "application_id=".$APPLICATION_ID."&auth_key=".$AUTH_KEY."&nonce=".$nonce."&timestamp=".$timestamp."&user[login]=".$user."&user[password]=".$user;
 
 	//echo "stringForSignature: " . $signature_string . "<br><br>";
-	$signature = hash_hmac('sha1', $signature_string , AUTH_SECRET);
+	$signature = hash_hmac('sha1', $signature_string , $AUTH_SECRET);
 
 	// Criando corpo da requisição
 	$post_body = http_build_query(array(
-			'application_id' => APPLICATION_ID,
-			'auth_key' => AUTH_KEY,
+			'application_id' => $APPLICATION_ID,
+			'auth_key' => $AUTH_KEY,
 			'timestamp' => $timestamp,
 			'nonce' => $nonce,
 			'signature' => $signature,
-			'user[login]' => USER_LOGIN,
-			'user[password]' => USER_PASSWORD
+			'user[login]' => $user,
+			'user[password]' => $user
 	));
 
-	// $post_body = "application_id=" . APPLICATION_ID . "&auth_key=" . AUTH_KEY . "&timestamp=" . $timestamp . "&nonce=" . $nonce . "&signature=" . $signature . "&user[login]=" . USER_LOGIN . "&user[password]=" . USER_PASSWORD;
+	// $post_body = "application_id=" . $APPLICATION_ID . "&auth_key=" . $AUTH_KEY . "&timestamp=" . $timestamp . "&nonce=" . $nonce . "&signature=" . $signature . "&user[login]=" . $user . "&user[password]=" . $user;
 
 	//echo "postBody: " . $post_body . "<br><br>";
 	// Configurando cURL
@@ -1673,8 +1681,17 @@ function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2)
 	// Fechando conexão
 	curl_close($curl);
 
+	
+	//NÃO ESTOU PASSANDO PELO METODO ApiUserSignIn POIS ESTE AQUI JÁ DEIXA A SESSÃO COM PRIVILÉGIOS DE USUÁRI DO APLICATIVO
 	//redirecionando o fluxo para a função de autenticação de usuário do aplicativo
-	ApiUserSignIn($token, $user, $facebook_usuario2);
+	//ApiUserSignIn($token, $user, $facebook_usuario2);
+	
+	if ($action == "DIALOG_CREATE")
+		//redirecionando o fluxo para buscar o ID do outro participante do chat
+		ApiUserRetrieve($token, $facebook_usuario2);
+	else if($action == "DIALOG_DELETE")
+		//redirecionando o fluxo para apagar o chat
+		ApiDialogDelete($token, $chat);
 }
 
 function ApiUserSignUp($token, $facebook_usuario, $email, $nome){
@@ -1761,6 +1778,7 @@ function ApiUserSignUp($token, $facebook_usuario, $email, $nome){
 	ApiSessionDestroy($token);
 }
 
+//Se o fluxo veio de uma sessão com user (ApiAppAndUserCreate) não precisa passar pela função abaixo, pois a sessão já tem privilégios de usuário do aplicativo
 function ApiUserSignIn($token, $user, $facebook_usuario2){
 
 	require 'config.php';
@@ -1779,8 +1797,8 @@ function ApiUserSignIn($token, $user, $facebook_usuario2){
 	
 	// Criando corpo da requisição
 	$post_body = http_build_query(array(
-			'login' => USER_LOGIN,
-			'password' => USER_PASSWORD
+			'login' => $user,
+			'password' => $user
 	));
 		
 	// Configurando cURL
@@ -1830,6 +1848,7 @@ function ApiUserSignIn($token, $user, $facebook_usuario2){
 	// Fechando conexão
 	curl_close($curl);
 	
+
 	//redirecionando o fluxo para buscar o ID do outro participante do chat
 	ApiUserRetrieve($token, $facebook_usuario2);
 }
@@ -2048,6 +2067,58 @@ function ApiDialogMessageSend($token, $occupant){
 	curl_close($curl);
 	
 	//redirecionando o fluxo para a função de destruição da sessão do aplicativo, sem necessitar da destruição da sessão de usuário
+	ApiSessionDestroy($token);
+}
+
+function ApiDialogDelete($token, $chat){
+	
+	// API endpoint
+	$QB_API_ENDPOINT = "https://api.quickblox.com/chat/Dialog";
+	$QB_PATH_SESSION = "{$chat}.json";
+	
+	//criando ou abrindo o log de cURL para escrita
+	$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/dialog_delete-'.date('Y-m-d').".txt";
+	$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	
+	// Configurando cURL
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE'); // Usar metodo DELETE
+	curl_setopt($curl, CURLOPT_HTTPHEADER,array('Content-Type: application/json')); //setando parâmetro no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array("QB-Token: {$token}")); //setando QB-Token no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
+	curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose, pra eu poder logar o fluxo cURL
+	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
+	curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //definindo arquivo de log pro fluxo cURL
+	
+	$PARAMETROS  = "QB-Token: {$token}\r\n";
+	$PARAMETROS .= "Chat: {$chat}\r\n\r\n";
+	
+	fwrite($FILE_LOG, $PARAMETROS);
+	
+	// Enviar request e pegar resposta
+	$response = curl_exec($curl);
+	var_dump($response);
+	
+	// Checando resposta e escrevendo em log
+	if ($response) {
+		$respostaLog = "\r\n\r\nResposta (se vazio, foi sucesso): {$response}\r\n\r\n";
+	}else{
+		$error = curl_error($curl). '(' .curl_errno($curl). ')';
+		$respostaLog = "\r\n\r\nErro: {$error}\r\n\r\n";
+	}
+	fwrite($FILE_LOG, $respostaLog);
+	
+	$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+	
+	fwrite($FILE_LOG, $LOG_TXT);
+	
+	fclose($FILE_LOG);
+	
+	// Fechando conexão
+	curl_close($curl);
+	
 	ApiSessionDestroy($token);
 }
 
