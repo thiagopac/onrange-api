@@ -9,6 +9,7 @@ $app->get('/', function () { echo "{\"Erro\":\"diretório raiz\"}"; }); //erro n
 $app->get('/local/listatodoslocais','listaTodosLocais'); //traz todos locais
 $app->get('/local/listaLocaisRange/:latitude_atual/:longitude_atual/:range/:order_by','listaLocaisRange'); //traz os locais dentro do range definido pelo usuario, baseando-se no local atual
 $app->get('/checkin/listaUsuariosCheckin/:id_local/:sexo/:id_usuario','listaUsuariosCheckin'); //traz os usuarios com checkin corrente no local informado
+$app->get('/checkin/listaUsuariosCheckinWidget/:id_local','listaUsuariosCheckinWidget'); //traz os facebook_usuarios com checkin corrente no local informado para o widget
 $app->get('/checkin/verificaCheckinUsuario/:id_usuario','verificaCheckinUsuario'); //retorna o Local onde o usuario possui checkin corrente
 $app->get('/match/listaMatches/:id_usuario','listaMatches'); //traz uma lista com todos os matches validos do usuario informado
 $app->get('/promo/listaPromosUsuario/:id_usuario','listaPromosUsuario'); //traz uma lista com todos as promos do usuario informado
@@ -1126,6 +1127,37 @@ function listaUsuariosCheckin($id_local,$sexo,$id_usuario)
 
         die();
     }
+}
+
+function listaUsuariosCheckinWidget($id_local)
+{
+		$sql = "SELECT USUARIO.id_facebook as facebook_usuario
+                FROM USUARIO INNER JOIN CHECKIN
+                        ON USUARIO.id_usuario = CHECKIN.id_usuario
+                WHERE CHECKIN.id_local = :id_local
+                        AND CHECKIN.dt_checkout IS NULL
+                ORDER BY CHECKIN.dt_checkin ASC";
+	try{
+		$conn = getConn();
+		$stmt = $conn->prepare($sql);
+		$stmt->bindParam("id_local",$id_local);
+		$stmt->execute();
+		$usuarios = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+		echo json_encode($usuarios);
+
+		$conn = null;
+
+	} catch(PDOException $e){
+
+		//ERRO 531
+		//MENSAGEM: Erro na listagem de usuarios
+
+		header('Ed-Return-Message: Erro na listagem de usuarios', true, 531);
+		echo '[]';
+
+		die();
+	}
 }
 
 function fazCheckout()
