@@ -2297,7 +2297,7 @@ function apagaUsuario()
     
     if($stmt->rowCount()){
     
-        echo "{\"id_output\":\"1\",\"desc_output\":\"Usuario apagado.\"}";
+        echo "[]";
     
     }
     else{
