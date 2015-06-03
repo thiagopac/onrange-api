@@ -12,6 +12,7 @@ $app->get('/checkin/listaUsuariosCheckin/:id_local/:sexo/:id_usuario','listaUsua
 $app->get('/checkin/listaUsuariosCheckinWidget/:id_local','listaUsuariosCheckinWidget'); //traz os facebook_usuarios com checkin corrente no local informado para o widget
 $app->get('/checkin/verificaCheckinUsuario/:id_usuario','verificaCheckinUsuario'); //retorna o Local onde o usuario possui checkin corrente
 $app->get('/match/listaMatches/:id_usuario','listaMatches'); //traz uma lista com todos os matches validos do usuario informado
+$app->get('/match/listaChats/:id_usuario','listaChats'); //traz um json do QuickBlox com todos os dados dos chats do usuário
 $app->get('/promo/listaPromosUsuario/:id_usuario','listaPromosUsuario'); //traz uma lista com todos as promos do usuario informado
 $app->get('/promo/verificapromolocal/:id_local','verificaPromoLocal'); //retorna o id do promo referente ao Local, caso exista
 $app->get('/promo/verificapromosnaolidos/:id_usuario','verificaPromosNaoLidos'); //retorna 1 caso haja promos nao lidos na caixa de entrada, caso contrario retorna 0
@@ -1363,6 +1364,35 @@ function listaMatches($id_usuario)
     $conn = null;
 }
 
+function listaChats($id_usuario)
+{
+	$sql = "SELECT USUARIO.id_facebook AS facebook_usuario
+            FROM USUARIO
+            WHERE USUARIO.id_usuario = :id_usuario";
+	try{
+		$conn = getConn();
+		$stmt = $conn->prepare($sql);
+		$stmt->bindParam("id_usuario",$id_usuario);
+		$stmt->execute();
+
+		$chats = $stmt->fetch(PDO::FETCH_OBJ);
+		
+		ApiAppAndUserSessionCreate($chats->facebook_usuario, null, "DIALOGS_RETRIEVE", null);
+		
+	} catch(PDOException $e){
+
+		//ERRO 539
+		//MENSAGEM: Erro ao buscar matches
+
+		header('Ed-Return-Message: Erro ao buscar chats', true, 539);
+		echo '[]';
+
+		die();
+	}
+
+	$conn = null;
+}
+
 function unMatch()
 {
     $request = \Slim\Slim::getInstance()->request();
@@ -1621,6 +1651,7 @@ function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2, $act
 
  - DIALOG_CREATE (este action é para o fluxo criar um novo chat. Ele segue para ApiUserRetrieve, para descobrir o ID_QB do outro usuário e depois para ApiDialogMessageSend que cria novo chat enviando uma mensagem
  - DIALOG_DELETE (este action é para o fluxo apagar um chat. Ele segue para ApiDialogDelete e apaga o chat para o usuário 
+ - DIALOGS_RETRIEVE (este action é para o fluxo de trazer todos os chats de um usuário. Ele segue para ApiDialogsRetrieve, retorna o JSON do QuickBlox e destrói a sessão em seguida
 
 */
 	
@@ -1680,7 +1711,8 @@ function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2, $act
 	}
 
 
-	$PARAMETROS = "Body: {$post_body}\r\n\r\n";
+	$PARAMETROS  = "Body: {$post_body}\r\n";
+	$PARAMETROS .= "Action: {$action}\r\n\r\n"; 
 
 	if($log == 1){
 		fwrite($FILE_LOG, $PARAMETROS);
@@ -1718,12 +1750,16 @@ function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2, $act
 	//redirecionando o fluxo para a função de autenticação de usuário do aplicativo
 	//ApiUserSignIn($token, $user, $facebook_usuario2);
 	
-	if ($action == "DIALOG_CREATE")
+	if ($action == "DIALOG_CREATE"){
 		//redirecionando o fluxo para buscar o ID do outro participante do chat
 		ApiUserRetrieve($token, $facebook_usuario2);
-	else if($action == "DIALOG_DELETE")
+	}else if($action == "DIALOG_DELETE"){
 		//redirecionando o fluxo para apagar o chat
 		ApiDialogDelete($token, $chat);
+	}else if($action == "DIALOGS_RETRIEVE"){
+		//redirecionando o fluxo para apagar o chat
+		ApiDialogsRetrieve($token, $facebook_usuario1);
+	}
 }
 
 function ApiUserSignUp($token, $facebook_usuario, $email, $nome){
@@ -1954,6 +1990,69 @@ function ApiUserRetrieve($token, $facebook_usuario2){
 	
 	//redirecionando o fluxo para a função de criação de diálogo de chat que já envia a primeira mensagem
 	ApiDialogMessageSend($token, $occupant);
+}
+
+function ApiDialogsRetrieve($token, $facebook_usuario){
+
+	require 'config.php';
+	header('Content-Type: application/json');
+
+	// API endpoint
+	$QB_API_ENDPOINT = "https://api.quickblox.com/chat";
+	$QB_PATH_SESSION = "Dialog.json";
+
+	if($log == 1){
+		//criando ou abrindo o log de cURL para escrita
+		$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/dialogs_retrieve-'.date('Y-m-d').".txt";
+		$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	}
+
+	// Configurando cURL
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array("QB-Token: {$token}")); //setando QB-Token no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
+	curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose, pra eu poder logar o fluxo cURL
+	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
+
+	if($log == 1){
+		curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //definindo arquivo de log pro fluxo cURL
+	}
+
+	$PARAMETROS = "QB-Token: {$token}\r\n\r\n";
+
+	if($log == 1){
+		fwrite($FILE_LOG, $PARAMETROS);
+	}
+
+	// Enviar request e pegar resposta
+	echo $response = curl_exec($curl);
+	$responseJson = json_decode($response, true);
+
+	// Checando resposta e escrevendo em log
+	if ($response) {
+		$respostaLog = "\r\n\r\nResposta: {$response}\r\n\r\n";
+	}else{
+		$error = curl_error($curl). '(' .curl_errno($curl). ')';
+		$respostaLog = "\r\n\r\nErro: {$error}\r\n\r\n";
+	}
+
+	if($log == 1){
+		fwrite($FILE_LOG, $respostaLog);
+
+		$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+			
+		fwrite($FILE_LOG, $LOG_TXT);
+
+		fclose($FILE_LOG);
+	}
+
+	// Fechando conexão
+	curl_close($curl);
+
+	//redirecionando o fluxo para a função de criação de diálogo de chat que já envia a primeira mensagem
+	ApiSessionDestroy($token);
 }
 
 function ApiDialogCreate($token, $occupant){
