@@ -66,6 +66,12 @@ function listaTodosLocais()
 
 function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 {
+	//gambiarra se chegar nulo ou zerado do android
+// 	if ($latitude_atual == null || $latitude_atual == 0 || $longitude_atual == null || $longitude_atual == 0) {
+// 		$latitude_atual = "-19.919128";
+// 		$longitude_atual = "-43.938628"; 
+// 	}
+	
 	// first-cut bounding box (in degrees)
 	$maxLat = $latitude_atual + rad2deg($range/6371);
 	$minLat = $latitude_atual - rad2deg($range/6371);
@@ -1377,7 +1383,8 @@ function listaChats($id_usuario)
 
 		$chats = $stmt->fetch(PDO::FETCH_OBJ);
 		
-		ApiAppAndUserSessionCreate($chats->facebook_usuario, null, "DIALOGS_RETRIEVE", null);
+		//INATIVADO POIS NÃO ESTAMOS USANDO ESSE MÉTODO PARA TRAZER CHAT
+		//ApiAppAndUserSessionCreate($chats->facebook_usuario, null, "DIALOGS_RETRIEVE", null);
 		
 	} catch(PDOException $e){
 
@@ -1410,7 +1417,6 @@ function unMatch()
         ApiAppAndUserSessionCreate($unmatch->facebook_usuario, null, "DIALOG_DELETE", $unmatch->id_chat);
         ApiAppAndUserSessionCreate($unmatch->facebook_usuario2, null, "DIALOG_DELETE", $unmatch->id_chat);
         //$unmatch->apaga_chat = CallAPIQB("DELETE","https://api.quickblox.com/chat/Dialog/" . $unmatch->id_chat . ".json","","QB-Token: " . $unmatch->qbtoken);
-            
     } catch(PDOException $e){
 
         //ERRO 544
@@ -1594,7 +1600,7 @@ function ApiAppSessionCreate($facebook_usuario, $email, $nome)
 	curl_setopt($curl, CURLOPT_POSTFIELDS, $post_body); // Encapsulando o body
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
 	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
-	curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose, pra eu poder logar o fluxo cURL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
 	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
 
 	if($log == 1){
@@ -1651,7 +1657,7 @@ function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2, $act
 
  - DIALOG_CREATE (este action é para o fluxo criar um novo chat. Ele segue para ApiUserRetrieve, para descobrir o ID_QB do outro usuário e depois para ApiDialogMessageSend que cria novo chat enviando uma mensagem
  - DIALOG_DELETE (este action é para o fluxo apagar um chat. Ele segue para ApiDialogDelete e apaga o chat para o usuário 
- - DIALOGS_RETRIEVE (este action é para o fluxo de trazer todos os chats de um usuário. Ele segue para ApiDialogsRetrieve, retorna o JSON do QuickBlox e destrói a sessão em seguida
+ - DIALOGS_RETRIEVE --INATIVADO (este action é para o fluxo de trazer todos os chats de um usuário. Ele segue para ApiDialogsRetrieve, retorna o JSON do QuickBlox e destrói a sessão em seguida
 
 */
 	
@@ -1703,7 +1709,7 @@ function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2, $act
 	curl_setopt($curl, CURLOPT_POSTFIELDS, $post_body); // Encapsulando o body
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
 	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
-	curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose, pra eu poder logar o fluxo cURL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
 	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
 
 	if($log == 1){
@@ -1712,7 +1718,10 @@ function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2, $act
 
 
 	$PARAMETROS  = "Body: {$post_body}\r\n";
-	$PARAMETROS .= "Action: {$action}\r\n\r\n"; 
+	$PARAMETROS .= "Action: {$action}\r\n";
+	$PARAMETROS .= "Facebook_usuario1: {$facebook_usuario1}\r\n";
+	$PARAMETROS .= "Facebook_usuario2: {$facebook_usuario2}\r\n\r\n";
+	
 
 	if($log == 1){
 		fwrite($FILE_LOG, $PARAMETROS);
@@ -1751,14 +1760,13 @@ function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2, $act
 	//ApiUserSignIn($token, $user, $facebook_usuario2);
 	
 	if ($action == "DIALOG_CREATE"){
+		$action = null;
 		//redirecionando o fluxo para buscar o ID do outro participante do chat
 		ApiUserRetrieve($token, $facebook_usuario2);
 	}else if($action == "DIALOG_DELETE"){
+		$action = null;
 		//redirecionando o fluxo para apagar o chat
 		ApiDialogDelete($token, $chat);
-	}else if($action == "DIALOGS_RETRIEVE"){
-		//redirecionando o fluxo para apagar o chat
-		ApiDialogsRetrieve($token, $facebook_usuario1);
 	}
 }
 
@@ -1801,7 +1809,7 @@ function ApiUserSignUp($token, $facebook_usuario, $email, $nome){
 	curl_setopt($curl, CURLOPT_POSTFIELDS, $post_body); // Encapsulando o body
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
 	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
-	curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose, pra eu poder logar o fluxo cURL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
 	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
 	
 	if($log == 1){
@@ -1878,7 +1886,7 @@ function ApiUserSignIn($token, $user, $facebook_usuario2){
 	curl_setopt($curl, CURLOPT_POSTFIELDS, $post_body); // Encapsulando o body
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
 	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
-	curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose, pra eu poder logar o fluxo cURL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
 	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
 	
 	if($log == 1){
@@ -1942,7 +1950,7 @@ function ApiUserRetrieve($token, $facebook_usuario2){
 	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
 	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
-	curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose, pra eu poder logar o fluxo cURL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
 	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
 	
 	if($log == 1){
@@ -2013,7 +2021,7 @@ function ApiDialogsRetrieve($token, $facebook_usuario){
 	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
 	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
-	curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose, pra eu poder logar o fluxo cURL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
 	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
 
 	if($log == 1){
@@ -2086,7 +2094,7 @@ function ApiDialogCreate($token, $occupant){
 	curl_setopt($curl, CURLOPT_POSTFIELDS, $post_body); // Encapsulando o body
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
 	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
-	curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose, pra eu poder logar o fluxo cURL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
 	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
 	
 	if($log == 1){
@@ -2159,7 +2167,7 @@ function ApiDialogMessageSend($token, $occupant){
 	curl_setopt($curl, CURLOPT_POSTFIELDS, $post_body); // Encapsulando o body
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
 	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
-	curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose, pra eu poder logar o fluxo cURL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
 	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
 	
 	if($log == 1){
@@ -2219,7 +2227,7 @@ function ApiDialogDelete($token, $chat){
 	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
 	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
-	curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose, pra eu poder logar o fluxo cURL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
 	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
 	curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //definindo arquivo de log pro fluxo cURL
 	
@@ -2230,7 +2238,7 @@ function ApiDialogDelete($token, $chat){
 	
 	// Enviar request e pegar resposta
 	$response = curl_exec($curl);
-	var_dump($response);
+	//var_dump($response);
 	
 	// Checando resposta e escrevendo em log
 	if ($response) {
@@ -2275,7 +2283,7 @@ function ApiSessionDestroy($token){
 	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
 	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
-	curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose, pra eu poder logar o fluxo cURL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
 	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
 	
 	if($log == 1){
