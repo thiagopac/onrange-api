@@ -1005,8 +1005,37 @@ function loginUsuario()
             $usuario->aniversario_usuario = $aniversario_usuario;
 			
             //Verifica se houve alteracao das informacoes pessoais
+            
+            if(!isset($usuario->nome_usuario)) $usuario->nome_usuario = NULL;
+            if(!isset($usuario->sobrenome_usuario)) $usuario->sobrenome_usuario = NULL;
+            if(!isset($usuario->sexo_usuario)) $usuario->sexo_usuario = NULL;
+            if(!isset($usuario->email_usuario)) $usuario->email_usuario = NULL;
+            if(!isset($usuario->aniversario_usuario)) $usuario->aniversario_usuario = NULL;
+            if(!isset($usuario->cidade_usuario)) $usuario->cidade_usuario = NULL;
+            if(!isset($usuario->pais_usuario)) $usuario->pais_usuario = NULL;
+            if(!isset($usuario->idioma_usuario)) $usuario->idioma_usuario = NULL;
+            
+            
+            $registro_nome_usuario = $registro_usuario->nome_usuario;
+            $nome_usuario = $usuario->nome_usuario;
+            $registro_sobrenome_usuario = $registro_usuario->sobrenome_usuario;
+            $sobrenome_usuario = $usuario->sobrenome_usuario;
+            $registro_sexo_usuario = $registro_usuario->sexo_usuario;
+            $sexo_usuario = $usuario->sexo_usuario;
+            $registro_email_usuario = $registro_usuario->email_usuario;
+            $email_usuario = $usuario->email_usuario;
+            $registro_aniversario_usuario = $registro_usuario->aniversario_usuario;
+            $aniversario_usuario = $usuario->aniversario_usuario;
+            $registro_cidade_usuario = $registro_usuario->cidade_usuario;
+            $cidade_usuario = $usuario->cidade_usuario;
+            $registro_pais_usuario = $registro_usuario->pais_usuario;
+            $pais_usuario = $usuario->pais_usuario;
+            $registro_idioma_usuario =  $registro_usuario->idioma_usuario;
+            $idioma_usuario = $usuario->idioma_usuario;
+            
+ 
 
-            if($registro_usuario->nome_usuario != $usuario->nome_usuario || $registro_usuario->sobrenome_usuario != $usuario->sobrenome_usuario || $registro_usuario->sexo_usuario != $usuario->sexo_usuario || $registro_usuario->email_usuario != $usuario->email_usuario || $registro_usuario->aniversario_usuario != $usuario->aniversario_usuario || $registro_usuario->cidade_usuario != $usuario->cidade_usuario || $registro_usuario->pais_usuario != $usuario->pais_usuario || $registro_usuario->idioma_usuario != $usuario->idioma_usuario){
+            if($registro_nome_usuario != $nome_usuario || $registro_sobrenome_usuario != $sobrenome_usuario || $registro_sexo_usuario != $sexo_usuario || $registro_email_usuario != $email_usuario || $registro_aniversario_usuario != $aniversario_usuario || $registro_cidade_usuario != $cidade_usuario || $registro_pais_usuario != $pais_usuario || $registro_idioma_usuario != $idioma_usuario){
             //Se houve alteracao em algum dos dados, atualiza o registro do usuario na base do Onrange
 
                 $sql = "UPDATE USUARIO SET nome = :nome_usuario, sobrenome = :sobrenome_usuario, sexo = :sexo_usuario, email = :email_usuario, aniversario = :aniversario_usuario, cidade = :cidade_usuario, pais = :pais_usuario, idioma = :idioma_usuario WHERE id_usuario = :id_usuario";
