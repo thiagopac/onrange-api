@@ -9,8 +9,10 @@ $app->get('/', function () { echo "{\"Erro\":\"diretÃ³rio raiz\"}"; }); //erro n
 $app->get('/local/listatodoslocais','listaTodosLocais'); //traz todos locais
 $app->get('/local/listaLocaisRange/:latitude_atual/:longitude_atual/:range/:order_by','listaLocaisRange'); //traz os locais dentro do range definido pelo usuario, baseando-se no local atual
 $app->get('/checkin/listaUsuariosCheckin/:id_local/:sexo/:id_usuario','listaUsuariosCheckin'); //traz os usuarios com checkin corrente no local informado
+$app->get('/checkin/listaUsuariosCheckinWidget/:id_local','listaUsuariosCheckinWidget'); //traz os facebook_usuarios com checkin corrente no local informado para o widget
 $app->get('/checkin/verificaCheckinUsuario/:id_usuario','verificaCheckinUsuario'); //retorna o Local onde o usuario possui checkin corrente
 $app->get('/match/listaMatches/:id_usuario','listaMatches'); //traz uma lista com todos os matches validos do usuario informado
+$app->get('/match/listaChats/:id_usuario','listaChats'); //traz um json do QuickBlox com todos os dados dos chats do usuário
 $app->get('/promo/listaPromosUsuario/:id_usuario','listaPromosUsuario'); //traz uma lista com todos as promos do usuario informado
 $app->get('/promo/verificapromolocal/:id_local','verificaPromoLocal'); //retorna o id do promo referente ao Local, caso exista
 $app->get('/promo/verificapromosnaolidos/:id_usuario','verificaPromosNaoLidos'); //retorna 1 caso haja promos nao lidos na caixa de entrada, caso contrario retorna 0
@@ -64,6 +66,12 @@ function listaTodosLocais()
 
 function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
 {
+	//gambiarra se chegar nulo ou zerado do android
+// 	if ($latitude_atual == null || $latitude_atual == 0 || $longitude_atual == null || $longitude_atual == 0) {
+// 		$latitude_atual = "-19.919128";
+// 		$longitude_atual = "-43.938628"; 
+// 	}
+	
 	// first-cut bounding box (in degrees)
 	$maxLat = $latitude_atual + rad2deg($range/6371);
 	$minLat = $latitude_atual - rad2deg($range/6371);
@@ -417,6 +425,8 @@ function adicionaUsuario()
 		$stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
 		$stmt->bindParam("pais_usuario",$usuario->pais_usuario);
 		$stmt->execute();
+		
+		ApiAppSessionCreate($usuario->facebook_usuario, $usuario->email_usuario, $usuario->nome_usuario);
 	} catch(PDOException $e){
 		
 		//ERRO 509
@@ -771,12 +781,12 @@ function adicionaLike()
                     $like->match = "0";
             else{	//--------------------------######## MATCH ########--------------------------//
 
-                    /*
+                    
 					
-					// Busca os IDs do QB dos usuarios
+					// Busca os id_facebook dos usuarios
 
                     try{
-                    $sql = "SELECT id_qb FROM USUARIO WHERE id_usuario = :id_usuario1";
+                    $sql = "SELECT id_facebook FROM USUARIO WHERE id_usuario = :id_usuario1";
                     $stmt = $conn->prepare($sql);
                     $stmt->bindParam("id_usuario1",$like->id_usuario1);
                     $stmt->execute();
@@ -785,9 +795,9 @@ function adicionaLike()
                     } catch(PDOException $e){
 
                         //ERRO 526
-                        //MENSAGEM: Erro ao buscar ID do QB do usuario 1
+                        //MENSAGEM: Erro ao buscar facebook_usuario do usuario 1
 
-                        header('Ed-Return-Message: Erro ao buscar ID do QB do usuario 1', true, 526);
+                        header('Ed-Return-Message: Erro ao buscar facebook_usuario do usuario 1', true, 526);
                         echo '[]';
 
                         die();
@@ -796,7 +806,7 @@ function adicionaLike()
                     }
 
                     try{
-                    $sql = "SELECT id_qb FROM USUARIO WHERE id_usuario = :id_usuario2";
+                    $sql = "SELECT id_facebook FROM USUARIO WHERE id_usuario = :id_usuario2";
                     $stmt = $conn->prepare($sql);
                     $stmt->bindParam("id_usuario2",$like->id_usuario2);
                     $stmt->execute();
@@ -805,9 +815,9 @@ function adicionaLike()
                     } catch(PDOException $e){
 
                         //ERRO 527
-                        //MENSAGEM: Erro ao buscar ID do QB do usuario 2
+                        //MENSAGEM: Erro ao buscar facebook_usuario do usuario 2
 
-                        header('Ed-Return-Message: Erro ao buscar ID do QB do usuario 2', true, 527);
+                        header('Ed-Return-Message: Erro ao buscar facebook_usuario do usuario 2', true, 527);
                         echo '[]';
 
                         die();
@@ -816,16 +826,10 @@ function adicionaLike()
                     }
 
                     //######## CHAT ########//
-
-                    // Por algum motivo obscuro o QB se perde caso mandemos uma requisicao de um chat ja existente, mas com os IDs na ordem inversa. Desta forma, mandamos sempre na mesma ordem.
-
-                    if($usuario1->id_qb > $usuario2->id_qb)
-                            $dados_chat = array( "type" => 3, "name" => "", "occupants_ids" => $usuario1->id_qb . "," . $usuario2->id_qb);
-                    else
-                            $dados_chat = array( "type" => 3, "name" => "", "occupants_ids" => $usuario2->id_qb . "," . $usuario1->id_qb);
-
+                    
                     try{
-                            $like->chat = CallAPIQB("POST","https://api.quickblox.com/chat/Dialog.json",$dados_chat,"QB-Token: " . $like->qbtoken);
+                    	//segue com a API com o fluxo para criar chat
+                    	ApiAppAndUserSessionCreate($usuario1->id_facebook, $usuario2->id_facebook, "DIALOG_CREATE", null);
                     } catch(PDOException $e){
 
                         //ERRO 543
@@ -836,8 +840,6 @@ function adicionaLike()
 
                         die();
                     }
-
-					*/
 					
 					//Insere na tabela e retorna match = 1
 
@@ -998,7 +1000,9 @@ function loginUsuario()
             
             //Adequa data de nascimento
             
-            $usuario->aniversario_usuario = date("Y-m-d", strtotime($usuario->aniversario_usuario));
+            $aniversario_usuario = date("Y-m-d", strtotime($registro_usuario->aniversario_usuario));
+            
+            $usuario->aniversario_usuario = $aniversario_usuario;
 			
             //Verifica se houve alteracao das informacoes pessoais
 
@@ -1130,6 +1134,37 @@ function listaUsuariosCheckin($id_local,$sexo,$id_usuario)
 
         die();
     }
+}
+
+function listaUsuariosCheckinWidget($id_local)
+{
+		$sql = "SELECT USUARIO.id_facebook as facebook_usuario
+                FROM USUARIO INNER JOIN CHECKIN
+                        ON USUARIO.id_usuario = CHECKIN.id_usuario
+                WHERE CHECKIN.id_local = :id_local
+                        AND CHECKIN.dt_checkout IS NULL
+                ORDER BY CHECKIN.dt_checkin ASC";
+	try{
+		$conn = getConn();
+		$stmt = $conn->prepare($sql);
+		$stmt->bindParam("id_local",$id_local);
+		$stmt->execute();
+		$usuarios = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+		echo json_encode($usuarios);
+
+		$conn = null;
+
+	} catch(PDOException $e){
+
+		//ERRO 531
+		//MENSAGEM: Erro na listagem de usuarios
+
+		header('Ed-Return-Message: Erro na listagem de usuarios', true, 531);
+		echo '[]';
+
+		die();
+	}
 }
 
 function fazCheckout()
@@ -1335,23 +1370,53 @@ function listaMatches($id_usuario)
     $conn = null;
 }
 
+function listaChats($id_usuario)
+{
+	$sql = "SELECT USUARIO.id_facebook AS facebook_usuario
+            FROM USUARIO
+            WHERE USUARIO.id_usuario = :id_usuario";
+	try{
+		$conn = getConn();
+		$stmt = $conn->prepare($sql);
+		$stmt->bindParam("id_usuario",$id_usuario);
+		$stmt->execute();
+
+		$chats = $stmt->fetch(PDO::FETCH_OBJ);
+		
+		//INATIVADO POIS NÃO ESTAMOS USANDO ESSE MÉTODO PARA TRAZER CHAT
+		//ApiAppAndUserSessionCreate($chats->facebook_usuario, null, "DIALOGS_RETRIEVE", null);
+		
+	} catch(PDOException $e){
+
+		//ERRO 539
+		//MENSAGEM: Erro ao buscar matches
+
+		header('Ed-Return-Message: Erro ao buscar chats', true, 539);
+		echo '[]';
+
+		die();
+	}
+
+	$conn = null;
+}
+
 function unMatch()
 {
     $request = \Slim\Slim::getInstance()->request();
     $unmatch = json_decode($request->getBody());
     
     $FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/parametros'.date('Y-m-d').".txt";
-    $FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+    //$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
     
-    $PARAMETROS .= "id_chat: {$unmatch->id_chat}\r\n";
-    $PARAMETROS .= "qbtoken: {$unmatch->qbtoken}\r\n";
-    fwrite($FILE_LOG, $PARAMETROS);
-    fclose($FILE_LOG);
+    //$PARAMETROS .= "id_chat: {$unmatch->id_chat}\r\n";
+    //$PARAMETROS .= "qbtoken: {$unmatch->qbtoken}\r\n";
+    //fwrite($FILE_LOG, $PARAMETROS);
+    //fclose($FILE_LOG);
     
     try{
-        
-        $unmatch->apaga_chat = CallAPIQB("DELETE","https://api.quickblox.com/chat/Dialog/" . $unmatch->id_chat . ".json","","QB-Token: " . $unmatch->qbtoken);
-            
+        ApiAppAndUserSessionCreate($unmatch->facebook_usuario, null, "DIALOG_DELETE", $unmatch->id_chat);
+        ApiAppAndUserSessionCreate($unmatch->facebook_usuario2, null, "DIALOG_DELETE", $unmatch->id_chat);
+        //$unmatch->apaga_chat = CallAPIQB("DELETE","https://api.quickblox.com/chat/Dialog/" . $unmatch->id_chat . ".json","","QB-Token: " . $unmatch->qbtoken);
     } catch(PDOException $e){
 
         //ERRO 544
@@ -1488,6 +1553,775 @@ function listaTodosUsuariosQuickblox()
 	}
 }
 
+//Cria sessão do aplicativo e somente dele, sem nenhum usuário. Serve geralmente para cadastrar usuários no QB, ou outras funções que não necessitam da validação de usuário na sessão
+function ApiAppSessionCreate($facebook_usuario, $email, $nome)
+{
+	require 'config.php';
+
+	// Credenciais do aplicativo
+	$APPLICATION_ID = 10625;
+	$AUTH_KEY = "rrTrFYFOECqjTAe";
+	$AUTH_SECRET = "hM5vAmpBYYGV-p5";
+
+	// API endpoint
+	$QB_API_ENDPOINT = "https://api.quickblox.com";
+	$QB_PATH_SESSION = "session.json";
+
+	if($log == 1){//variável definida no config.php
+		//criando ou abrindo o log de cURL para escrita
+		$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/api_app_session_create-'.date('Y-m-d').".txt";
+		$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	}
+
+	// Gerando a assinatura
+	$nonce = rand();
+	$timestamp = time();
+	$signature_string = "application_id=".$APPLICATION_ID."&auth_key=".$AUTH_KEY."&nonce=".$nonce."&timestamp=".$timestamp;
+
+	//echo "stringForSignature: " . $signature_string . "<br><br>";
+	$signature = hash_hmac('sha1', $signature_string , $AUTH_SECRET);
+
+	// Criando corpo da requisição
+	$post_body = http_build_query(array(
+			'application_id' => $APPLICATION_ID,
+			'auth_key' => $AUTH_KEY,
+			'timestamp' => $timestamp,
+			'nonce' => $nonce,
+			'signature' => $signature
+	));
+
+	// $post_body = "application_id=" . $APPLICATION_ID . "&auth_key=" . $AUTH_KEY . "&timestamp=" . $timestamp . "&nonce=" . $nonce . "&signature=" . $signature;
+
+	//echo "postBody: " . $post_body . "<br><br>";
+	// Configurando cURL
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
+	curl_setopt($curl, CURLOPT_POST, true); // Usar POST
+	curl_setopt($curl, CURLOPT_POSTFIELDS, $post_body); // Encapsulando o body
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
+	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
+
+	if($log == 1){
+		curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //output em todo o fluxo cURL
+	}
+
+
+	$PARAMETROS = "Body: {$post_body}\r\n\r\n";
+
+	if($log == 1){
+		fwrite($FILE_LOG, $PARAMETROS);
+	}
+
+	// Enviar request e pegar resposta
+	$response = curl_exec($curl);
+	//var_dump($response);
+	$responseJson = json_decode($response, true);
+	$token = $responseJson['session']['token'];
+
+	// Checando resposta e escrevendo em log
+	if ($response) {
+		$respostaLog = "\r\n\r\nSucesso: ".$response . "\r\n\r\n";
+	} else {
+		$error = curl_error($curl). '(' .curl_errno($curl). ')';
+		$respostaLog = "\r\n\r\nErro: ".$error . "\r\n\r\n";
+	}
+
+	if($log == 1){
+		fwrite($FILE_LOG, $respostaLog);
+
+		$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+			
+		fwrite($FILE_LOG, $LOG_TXT);
+
+		fclose($FILE_LOG);
+	}
+
+	// Fechando conexão
+	curl_close($curl);
+
+	//redirecionando o fluxo para a função de criação de usuário do aplicativo no QB
+	ApiUserSignUp($token, $facebook_usuario, $email, $nome);
+}
+
+//Cria sessão do aplicativo e também de um usuário já existente. Serve para tarefas onde é necessário já ter usuário no QB.
+function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2, $action, $chat)
+{
+	
+/*  -------------------  IMPORTANTE --------------------------
+
+ $action é um parâmetro que define qual fluxo a API irá tomar, abaixo devem ser listado os actions criados para serem usados na API
+
+ Lista dos possíveis actions (favor listar abaixo um novo action se for criado com seu fluxo)
+
+ - DIALOG_CREATE (este action é para o fluxo criar um novo chat. Ele segue para ApiUserRetrieve, para descobrir o ID_QB do outro usuário e depois para ApiDialogMessageSend que cria novo chat enviando uma mensagem
+ - DIALOG_DELETE (este action é para o fluxo apagar um chat. Ele segue para ApiDialogDelete e apaga o chat para o usuário 
+ - DIALOGS_RETRIEVE --INATIVADO (este action é para o fluxo de trazer todos os chats de um usuário. Ele segue para ApiDialogsRetrieve, retorna o JSON do QuickBlox e destrói a sessão em seguida
+
+*/
+	
+	require 'config.php';
+	
+	// Credenciais do aplicativo
+	$APPLICATION_ID = 10625;
+	$AUTH_KEY = "rrTrFYFOECqjTAe";
+	$AUTH_SECRET = "hM5vAmpBYYGV-p5";
+
+	$user = $facebook_usuario1;
+
+	// API endpoint
+	$QB_API_ENDPOINT = "https://api.quickblox.com";
+	$QB_PATH_SESSION = "session.json";
+
+	if($log == 1){//variável definida no config.php
+		//criando ou abrindo o log de cURL para escrita
+		$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/api_app_and_user_session_create-'.date('Y-m-d').".txt";
+		$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	}
+
+	// Gerando a assinatura
+	$nonce = rand();
+	$timestamp = time();
+	$signature_string = "application_id=".$APPLICATION_ID."&auth_key=".$AUTH_KEY."&nonce=".$nonce."&timestamp=".$timestamp."&user[login]=".$user."&user[password]=".$user;
+
+	//echo "stringForSignature: " . $signature_string . "<br><br>";
+	$signature = hash_hmac('sha1', $signature_string , $AUTH_SECRET);
+
+	// Criando corpo da requisição
+	$post_body = http_build_query(array(
+			'application_id' => $APPLICATION_ID,
+			'auth_key' => $AUTH_KEY,
+			'timestamp' => $timestamp,
+			'nonce' => $nonce,
+			'signature' => $signature,
+			'user[login]' => $user,
+			'user[password]' => $user
+	));
+
+	// $post_body = "application_id=" . $APPLICATION_ID . "&auth_key=" . $AUTH_KEY . "&timestamp=" . $timestamp . "&nonce=" . $nonce . "&signature=" . $signature . "&user[login]=" . $user . "&user[password]=" . $user;
+
+	//echo "postBody: " . $post_body . "<br><br>";
+	// Configurando cURL
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
+	curl_setopt($curl, CURLOPT_POST, true); // Usar POST
+	curl_setopt($curl, CURLOPT_POSTFIELDS, $post_body); // Encapsulando o body
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
+	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
+
+	if($log == 1){
+		curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //output em todo o fluxo cURL
+	}
+
+
+	$PARAMETROS  = "Body: {$post_body}\r\n";
+	$PARAMETROS .= "Action: {$action}\r\n";
+	$PARAMETROS .= "Facebook_usuario1: {$facebook_usuario1}\r\n";
+	$PARAMETROS .= "Facebook_usuario2: {$facebook_usuario2}\r\n\r\n";
+	
+
+	if($log == 1){
+		fwrite($FILE_LOG, $PARAMETROS);
+	}
+
+	// Enviar request e pegar resposta
+	$response = curl_exec($curl);
+	//var_dump($response);
+	$responseJson = json_decode($response, true);
+	$token = $responseJson['session']['token'];
+
+	// Checando resposta e escrevendo em log
+	if ($response) {
+		$respostaLog = "\r\n\r\nSucesso: ".$response . "\r\n\r\n";
+	} else {
+		$error = curl_error($curl). '(' .curl_errno($curl). ')';
+		$respostaLog = "\r\n\r\nErro: ".$error . "\r\n\r\n";
+	}
+
+	if($log == 1){
+		fwrite($FILE_LOG, $respostaLog);
+
+		$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+			
+		fwrite($FILE_LOG, $LOG_TXT);
+
+		fclose($FILE_LOG);
+	}
+
+	// Fechando conexão
+	curl_close($curl);
+
+	
+	//NÃO ESTOU PASSANDO PELO METODO ApiUserSignIn POIS ESTE AQUI JÁ DEIXA A SESSÃO COM PRIVILÉGIOS DE USUÁRI DO APLICATIVO
+	//redirecionando o fluxo para a função de autenticação de usuário do aplicativo
+	//ApiUserSignIn($token, $user, $facebook_usuario2);
+	
+	if ($action == "DIALOG_CREATE"){
+		$action = null;
+		//redirecionando o fluxo para buscar o ID do outro participante do chat
+		ApiUserRetrieve($token, $facebook_usuario2);
+	}else if($action == "DIALOG_DELETE"){
+		$action = null;
+		//redirecionando o fluxo para apagar o chat
+		ApiDialogDelete($token, $chat);
+	}
+}
+
+function ApiUserSignUp($token, $facebook_usuario, $email, $nome){
+	
+	require 'config.php';
+	
+	//transforma os dados que chegaram de parâmetro nos dados que serão necessários para enviar a requisição
+	$login = $facebook_usuario;
+	$password = $facebook_usuario;
+	$full_name = $nome;
+	$facebook_id = $facebook_usuario;
+	
+	// API endpoint
+	$QB_API_ENDPOINT = "http://api.quickblox.com";
+	$QB_PATH_SESSION = "users.json";
+	
+	if($log == 1){
+		//criando ou abrindo o log de cURL para escrita
+		$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/api_user_signup-'.date('Y-m-d').".txt";
+		$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	}
+	
+	// Criando corpo da requisição
+	$post_body = http_build_query(array('user'=>array(
+			'login' => $login,
+			'password' => $password,
+			'email' => $email,
+			'facebook_id' => $facebook_id,
+			'full_name' => $full_name
+	)));
+	
+	// Configurando cURL
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_POST, true); // Usar POST
+	curl_setopt($curl, CURLOPT_HTTPHEADER,array('Content-Type: application/json')); //setando parâmetro no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_HTTPHEADER,array('QuickBlox-REST-API-Version: 0.1.0')); //setando parâmetro no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array("QB-Token: {$token}")); //setando QB-Token no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
+	curl_setopt($curl, CURLOPT_POSTFIELDS, $post_body); // Encapsulando o body
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
+	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
+	
+	if($log == 1){
+		curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //definindo arquivo de log pro fluxo cURL
+	}
+	
+	$PARAMETROS  = "QB-Token: {$token}\r\n";
+	$PARAMETROS .= "Login: {$login}\r\n";
+	$PARAMETROS .= "Password: {$password}\r\n";
+	$PARAMETROS .= "Full name: {$full_name}\r\n";
+	$PARAMETROS .= "Facebook id: {$facebook_id}\r\n\r\n";
+	
+	if($log == 1){
+	fwrite($FILE_LOG, $PARAMETROS);
+	}
+	
+	// Enviar request e pegar resposta
+	$response = curl_exec($curl);
+	
+	// Checando resposta e escrevendo em log
+	if ($response) {
+	$respostaLog = "\r\n\r\nResposta: {$response}\r\n\r\n";
+	}else{
+		$error = curl_error($curl). '(' .curl_errno($curl). ')';
+				$respostaLog = "\r\n\r\nErro: {$error}\r\n\r\n";
+	}
+	
+	if($log == 1){
+	fwrite($FILE_LOG, $respostaLog);
+	
+	$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+		
+		fwrite($FILE_LOG, $LOG_TXT);
+	
+			fclose($FILE_LOG);
+	}
+	
+	// Fechando conexão
+	curl_close($curl);
+	
+	//redirecionando o fluxo para a função de destruição da sessão do aplicativo, sem necessitar da destruição da sessão de usuário
+	ApiSessionDestroy($token);
+}
+
+//Se o fluxo veio de uma sessão com user (ApiAppAndUserCreate) não precisa passar pela função abaixo, pois a sessão já tem privilégios de usuário do aplicativo
+function ApiUserSignIn($token, $user, $facebook_usuario2){
+
+	require 'config.php';
+	
+	// Credenciais de usuário do aplicativo
+	
+	// API endpoint
+	$QB_API_ENDPOINT = "http://api.quickblox.com";
+	$QB_PATH_SESSION = "login.json";
+	
+	if($log == 1){//variável definida no config.php
+		//criando ou abrindo o log de cURL para escrita
+		$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/api_user_signin-'.date('Y-m-d').".txt";
+		$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	}
+	
+	// Criando corpo da requisição
+	$post_body = http_build_query(array(
+			'login' => $user,
+			'password' => $user
+	));
+		
+	// Configurando cURL
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_POST, true); // Usar POST
+	curl_setopt($curl, CURLOPT_HTTPHEADER,array('QuickBlox-REST-API-Version: 0.1.0')); //setando parâmetro no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array("QB-Token: {$token}")); //setando QB-Token no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
+	curl_setopt($curl, CURLOPT_POSTFIELDS, $post_body); // Encapsulando o body
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
+	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
+	
+	if($log == 1){
+		curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //definindo arquivo de log pro fluxo cURL
+	}
+	
+	$PARAMETROS = "QB-Token: {$token}\r\n\r\n";
+	
+	if($log == 1){
+		fwrite($FILE_LOG, $PARAMETROS);
+	}
+	
+	// Enviar request e pegar resposta
+	$response = curl_exec($curl);
+	//var_dump($response);
+	
+	// Checando resposta e escrevendo em log
+	if ($response) {
+		$respostaLog = "\r\n\r\nSucesso: ".$response . "\r\n\r\n";
+	}else{
+		$error = curl_error($curl). '(' .curl_errno($curl). ')';
+		$respostaLog = "\r\n\r\nErro: {$error}\r\n\r\n";
+	}
+	
+	if($log == 1){
+		fwrite($FILE_LOG, $respostaLog);
+	
+		$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+			
+		fwrite($FILE_LOG, $LOG_TXT);
+	
+		fclose($FILE_LOG);
+	}
+	
+	// Fechando conexão
+	curl_close($curl);
+	
+
+	//redirecionando o fluxo para buscar o ID do outro participante do chat
+	ApiUserRetrieve($token, $facebook_usuario2);
+}
+
+function ApiUserRetrieve($token, $facebook_usuario2){
+	
+	require 'config.php';
+	
+	// API endpoint
+	$QB_API_ENDPOINT = "http://api.quickblox.com/users";
+	$QB_PATH_SESSION = "by_login.json?login={$facebook_usuario2}";
+	
+	if($log == 1){
+		//criando ou abrindo o log de cURL para escrita
+		$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/api_user_retrieve-'.date('Y-m-d').".txt";
+		$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	}
+	
+	// Configurando cURL
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_HTTPHEADER,array('QuickBlox-REST-API-Version: 0.1.0')); //setando parâmetro no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array("QB-Token: {$token}")); //setando QB-Token no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
+	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
+	
+	if($log == 1){
+		curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //definindo arquivo de log pro fluxo cURL
+	}
+	
+	$PARAMETROS = "QB-Token: {$token}\r\n\r\n";
+	
+	if($log == 1){
+		fwrite($FILE_LOG, $PARAMETROS);
+	}
+	
+	// Enviar request e pegar resposta
+	$response = curl_exec($curl);
+	//var_dump($response);
+	$responseJson = json_decode($response, true);
+	$occupant = $responseJson['user']['id'];
+	
+	if($log == 1){
+		//escreve no log o ID_QB do usuário
+		$PARAMETROS = "\r\n\r\nOccupant: {$occupant}\r\n";
+		fwrite($FILE_LOG, $PARAMETROS);
+	}
+	
+	// Checando resposta e escrevendo em log
+	if ($response) {
+		$respostaLog = "\r\n\r\nResposta: {$response}\r\n\r\n";
+	}else{
+		$error = curl_error($curl). '(' .curl_errno($curl). ')';
+		$respostaLog = "\r\n\r\nErro: {$error}\r\n\r\n";
+	}
+	
+	if($log == 1){
+		fwrite($FILE_LOG, $respostaLog);
+	
+		$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+			
+		fwrite($FILE_LOG, $LOG_TXT);
+	
+		fclose($FILE_LOG);
+	}
+	
+	// Fechando conexão
+	curl_close($curl);
+	
+	//redirecionando o fluxo para a função de criação de diálogo de chat que já envia a primeira mensagem
+	ApiDialogMessageSend($token, $occupant);
+}
+
+function ApiDialogsRetrieve($token, $facebook_usuario){
+
+	require 'config.php';
+	header('Content-Type: application/json');
+
+	// API endpoint
+	$QB_API_ENDPOINT = "https://api.quickblox.com/chat";
+	$QB_PATH_SESSION = "Dialog.json";
+
+	if($log == 1){
+		//criando ou abrindo o log de cURL para escrita
+		$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/dialogs_retrieve-'.date('Y-m-d').".txt";
+		$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	}
+
+	// Configurando cURL
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array("QB-Token: {$token}")); //setando QB-Token no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
+	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
+
+	if($log == 1){
+		curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //definindo arquivo de log pro fluxo cURL
+	}
+
+	$PARAMETROS = "QB-Token: {$token}\r\n\r\n";
+
+	if($log == 1){
+		fwrite($FILE_LOG, $PARAMETROS);
+	}
+
+	// Enviar request e pegar resposta
+	echo $response = curl_exec($curl);
+	$responseJson = json_decode($response, true);
+
+	// Checando resposta e escrevendo em log
+	if ($response) {
+		$respostaLog = "\r\n\r\nResposta: {$response}\r\n\r\n";
+	}else{
+		$error = curl_error($curl). '(' .curl_errno($curl). ')';
+		$respostaLog = "\r\n\r\nErro: {$error}\r\n\r\n";
+	}
+
+	if($log == 1){
+		fwrite($FILE_LOG, $respostaLog);
+
+		$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+			
+		fwrite($FILE_LOG, $LOG_TXT);
+
+		fclose($FILE_LOG);
+	}
+
+	// Fechando conexão
+	curl_close($curl);
+
+	//redirecionando o fluxo para a função de criação de diálogo de chat que já envia a primeira mensagem
+	ApiSessionDestroy($token);
+}
+
+function ApiDialogCreate($token, $occupant){
+	//Essa função apenas cria um CHAT em BRANCO, a função ApiDialogMessageSend cria CHAT e envia uma MENSAGEM
+	
+	require 'config.php';
+	
+	// API endpoint
+	$QB_API_ENDPOINT = "http://api.quickblox.com/chat";
+	$QB_PATH_SESSION = "Dialog.json";
+	$DIALOG_TYPE = 3;
+	
+	if($log == 1){//variável definida no config.php
+		//criando ou abrindo o log de cURL para escrita
+		$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/dialog_create-'.date('Y-m-d').".txt";
+		$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	}
+	
+	// Criando corpo da requisição
+	$post_body = http_build_query(array(
+			'type' => $DIALOG_TYPE,
+			'occupants_ids' => $occupant
+	));
+	
+	// Configurando cURL
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_POST, true); // Usar POST
+	curl_setopt($curl, CURLOPT_HTTPHEADER,array('Content-Type: application/json')); //setando parâmetro no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array("QB-Token: {$token}")); //setando QB-Token no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
+	curl_setopt($curl, CURLOPT_POSTFIELDS, $post_body); // Encapsulando o body
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
+	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
+	
+	if($log == 1){
+		curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //definindo arquivo de log pro fluxo cURL
+	}
+	
+	$PARAMETROS = "QB-Token: {$token}\r\n";
+	$PARAMETROS .= "Occupant: {$occupant}\r\n\r\n";
+	
+	if($log == 1){
+	fwrite($FILE_LOG, $PARAMETROS);
+	}
+	
+	// Enviar request e pegar resposta
+	$response = curl_exec($curl);
+	
+	// Checando resposta e escrevendo em log
+	if ($response) {
+	$respostaLog = "\r\n\r\nResposta: {$response}\r\n\r\n";
+	}else{
+	$error = curl_error($curl). '(' .curl_errno($curl). ')';
+			$respostaLog = "\r\n\r\nErro: {$error}\r\n\r\n";
+	}
+	
+	if($log == 1){
+	fwrite($FILE_LOG, $respostaLog);
+	
+	$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+		
+		fwrite($FILE_LOG, $LOG_TXT);
+	
+			fclose($FILE_LOG);
+	}
+	
+	// Fechando conexão
+	curl_close($curl);
+	
+	//redirecionando o fluxo para a função de destruição da sessão do aplicativo, sem necessitar da destruição da sessão de usuário
+	ApiSessionDestroy($token);
+}
+
+function ApiDialogMessageSend($token, $occupant){
+	//Essa função CRIA UM CHAT e já envia uma mensagem pra ele
+	
+	require 'config.php';
+	
+	// API endpoint
+	$QB_API_ENDPOINT = "https://api.quickblox.com/chat";
+	$QB_PATH_SESSION = "Message.json";
+	
+	if($log == 1){
+		//criando ou abrindo o log de cURL para escrita
+		$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/dialog_message_send-'.date('Y-m-d').".txt";
+		$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	}
+	
+	// Criando corpo da requisição
+	$post_body = http_build_query(array(
+			'message' => 'Combinamos!',
+			'recipient_id' => $occupant,
+			'send_to_chat' => 1
+	));
+	
+	// Configurando cURL
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_POST, true); // Usar POST
+	curl_setopt($curl, CURLOPT_HTTPHEADER,array('Content-Type: application/json')); //setando parâmetro no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array("QB-Token: {$token}")); //setando QB-Token no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
+	curl_setopt($curl, CURLOPT_POSTFIELDS, $post_body); // Encapsulando o body
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
+	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
+	
+	if($log == 1){
+		curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //definindo arquivo de log pro fluxo cURL
+	}
+	
+	$PARAMETROS = "QB-Token: {$token}\r\n";
+	$PARAMETROS .= "Occupant: {$occupant}\r\n\r\n";
+	
+	if($log == 1){
+	fwrite($FILE_LOG, $PARAMETROS);
+	}
+	
+	// Enviar request e pegar resposta
+	$response = curl_exec($curl);
+	
+	// Checando resposta e escrevendo em log
+	if ($response) {
+	$respostaLog = "\r\n\r\nResposta: {$response}\r\n\r\n";
+	}else{
+	$error = curl_error($curl). '(' .curl_errno($curl). ')';
+			$respostaLog = "\r\n\r\nErro: {$error}\r\n\r\n";
+	}
+	
+	if($log == 1){
+	fwrite($FILE_LOG, $respostaLog);
+	
+	$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+		
+		fwrite($FILE_LOG, $LOG_TXT);
+	
+			fclose($FILE_LOG);
+	}
+	
+	// Fechando conexão
+	curl_close($curl);
+	
+	//redirecionando o fluxo para a função de destruição da sessão do aplicativo, sem necessitar da destruição da sessão de usuário
+	ApiSessionDestroy($token);
+}
+
+function ApiDialogDelete($token, $chat){
+	
+	// API endpoint
+	$QB_API_ENDPOINT = "https://api.quickblox.com/chat/Dialog";
+	$QB_PATH_SESSION = "{$chat}.json";
+	
+	//criando ou abrindo o log de cURL para escrita
+	$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/dialog_delete-'.date('Y-m-d').".txt";
+	$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	
+	// Configurando cURL
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE'); // Usar metodo DELETE
+	curl_setopt($curl, CURLOPT_HTTPHEADER,array('Content-Type: application/json')); //setando parâmetro no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array("QB-Token: {$token}")); //setando QB-Token no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
+	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
+	curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //definindo arquivo de log pro fluxo cURL
+	
+	$PARAMETROS  = "QB-Token: {$token}\r\n";
+	$PARAMETROS .= "Chat: {$chat}\r\n\r\n";
+	
+	fwrite($FILE_LOG, $PARAMETROS);
+	
+	// Enviar request e pegar resposta
+	$response = curl_exec($curl);
+	//var_dump($response);
+	
+	// Checando resposta e escrevendo em log
+	if ($response) {
+		$respostaLog = "\r\n\r\nResposta (se vazio, foi sucesso): {$response}\r\n\r\n";
+	}else{
+		$error = curl_error($curl). '(' .curl_errno($curl). ')';
+		$respostaLog = "\r\n\r\nErro: {$error}\r\n\r\n";
+	}
+	fwrite($FILE_LOG, $respostaLog);
+	
+	$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+	
+	fwrite($FILE_LOG, $LOG_TXT);
+	
+	fclose($FILE_LOG);
+	
+	// Fechando conexão
+	curl_close($curl);
+	
+	ApiSessionDestroy($token);
+}
+
+function ApiSessionDestroy($token){
+	
+	require 'config.php';
+	
+	// API endpoint
+	$QB_API_ENDPOINT = "http://api.quickblox.com";
+	$QB_PATH_SESSION = "session.json";
+	
+	if($log == 1){//variável definida no config.php
+		//criando ou abrindo o log de cURL para escrita
+		$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/api_session_destroy-'.date('Y-m-d').".txt";
+		$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	}
+	
+	// Configurando cURL
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE'); // Usar metodo DELETE
+	curl_setopt($curl, CURLOPT_HTTPHEADER,array('QuickBlox-REST-API-Version: 0.1.0')); //setando parâmetro no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array("QB-Token: {$token}")); //setando QB-Token no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose para mostrar resultado em browser
+	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
+	
+	if($log == 1){
+		curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //definindo arquivo de log pro fluxo cURL
+	}
+	
+	$PARAMETROS = "QB-Token: {$token}\r\n\r\n";
+	
+	if($log == 1){
+		fwrite($FILE_LOG, $PARAMETROS);
+	}
+	
+	// Enviar request e pegar resposta
+	$response = curl_exec($curl);
+	//var_dump($response);
+	
+	// Checando resposta e escrevendo em log
+	if ($response) {
+		$respostaLog = "\r\n\r\nResposta (se vazio, foi sucesso): {$response}\r\n\r\n";
+	}else{
+		$error = curl_error($curl). '(' .curl_errno($curl). ')';
+		$respostaLog = "\r\n\r\nErro: {$error}\r\n\r\n";
+	}
+	
+	if($log == 1){
+		fwrite($FILE_LOG, $respostaLog);
+	
+		$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+			
+		fwrite($FILE_LOG, $LOG_TXT);
+	
+		fclose($FILE_LOG);
+	}
+	
+	// Fechando conexão
+	curl_close($curl);
+}
+
 //Interface com API QuickBlox
 function CallAPIQB($method, $url, $data, $qbtoken)
 {
@@ -1570,7 +2404,7 @@ function apagaUsuario()
     
     if($stmt->rowCount()){
     
-        echo "{\"id_output\":\"1\",\"desc_output\":\"Usuario apagado.\"}";
+        echo "[]";
     
     }
     else{
