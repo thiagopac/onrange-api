@@ -659,275 +659,300 @@ function adicionaLike()
 {
     $request = \Slim\Slim::getInstance()->request();
     $like = json_decode($request->getBody());
-
-    //Verifica se o usuario destino do like ainda tem um checkin valido
-
-    $sql = "SELECT 1 FROM CHECKIN WHERE id_usuario = :id_usuario2 AND id_local = :id_local AND DT_CHECKOUT IS NULL";
-    try{
-            $conn = getConn();
-            $stmt = $conn->prepare($sql);
-            $stmt->bindParam("id_usuario2",$like->id_usuario2);
-            $stmt->bindParam("id_local",$like->id_local);
-            $stmt->execute();
-
-    } catch(PDOException $e){
-
-        //ERRO 521
-        //MENSAGEM: Erro ao buscar checkin do usuario de destino
-
-        header('Ed-Return-Message: Erro ao buscar checkin do usuario de destino', true, 521);
-        echo '[]';
-
-        die();
-
-        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-    }
-
-    //Se o usuario de destino fez o checkout
-    if(!$stmt->fetchObject()){ 
-
-        //ERRO 522
-        //MENSAGEM: Usuario de destino realizou checkout
-
-        header('Ed-Return-Message: Usuario de destino realizou checkout', true, 522);
-        echo '[]';
-
-        die();
-
-        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-
-    }
-    else{ //Se o checkin do usuario destino ainda e valido
-	
-        //Verifica se o usuario ja foi curtido ou não
-
-        $sql = "SELECT id_like FROM LIKES WHERE id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2 AND dt_expiracao IS NULL";
-        try{
-                $stmt = $conn->prepare($sql);
-                $stmt->bindParam("id_usuario1",$like->id_usuario1);
-                $stmt->bindParam("id_usuario2",$like->id_usuario2);
-                $stmt->execute();
-
-                $like_existente = $stmt->fetch(PDO::FETCH_OBJ);
-
-        } catch(PDOException $e){
-
-            //ERRO 523
-            //MENSAGEM: Erro ao verificar se ja existe like
-
-            header('Ed-Return-Message: Erro ao verificar se ja existe like', true, 523);
-            echo '[]';
-
-            die();
-
-            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-
-        }
-
-        //Se ja não existe like valido
-        if(!$like_existente){
-
-            //Da o like
-
-            $sql = "INSERT INTO LIKES (id_usuario1, id_usuario2, id_local, dt_like) VALUES (:id_usuario1, :id_usuario2, :id_local, NOW())";
-            try{
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bindParam("id_usuario1",$like->id_usuario1);
-                    $stmt->bindParam("id_usuario2",$like->id_usuario2);
-                    $stmt->bindParam("id_local",$like->id_local);
-                    $stmt->execute();
-                    $like->id_like = $conn->lastInsertId();
-
-            } catch(PDOException $e){
-
-                //ERRO 524
-                //MENSAGEM: Erro ao curtir
-
-                header('Ed-Return-Message: Erro ao curtir', true, 524);
-                echo '[]';
-
-                die();
-
-                //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-
-            }
-
-            //Verifica se houve o match
-
-            //Verifica se o outro usuario ja deu o like tambem, e se o mesmo ainda e valido
-            try{
-                    $sql = "SELECT 1 FROM LIKES WHERE id_usuario1 = :id_usuario2 AND id_usuario2 = :id_usuario1 AND DT_EXPIRACAO IS NULL"; 
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bindParam("id_usuario1",$like->id_usuario1);
-                    $stmt->bindParam("id_usuario2",$like->id_usuario2);
-                    $stmt->execute();
-
-            } catch(PDOException $e){
-
-                //ERRO 525
-                //MENSAGEM: Erro ao verificar se houve match
-
-                header('Ed-Return-Message: Erro ao verificar se houve match', true, 525);
-                echo '[]';
-
-                die();
-
-                //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-            }
-
-            //Retorna match = 0 se não houver retorno do select
-
-            if(!$stmt->fetchObject())
-                    $like->match = "0";
-            else{	//--------------------------######## MATCH ########--------------------------//
-
-                    
-					
-					// Busca os id_facebook dos usuarios
-
-                    try{
-                    $sql = "SELECT id_facebook FROM USUARIO WHERE id_usuario = :id_usuario1";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bindParam("id_usuario1",$like->id_usuario1);
-                    $stmt->execute();
-                    $usuario1 = $stmt->fetch(PDO::FETCH_OBJ);
-
-                    } catch(PDOException $e){
-
-                        //ERRO 526
-                        //MENSAGEM: Erro ao buscar facebook_usuario do usuario 1
-
-                        header('Ed-Return-Message: Erro ao buscar facebook_usuario do usuario 1', true, 526);
-                        echo '[]';
-
-                        die();
-
-                        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-                    }
-
-                    try{
-                    $sql = "SELECT id_facebook FROM USUARIO WHERE id_usuario = :id_usuario2";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bindParam("id_usuario2",$like->id_usuario2);
-                    $stmt->execute();
-                    $usuario2 = $stmt->fetch(PDO::FETCH_OBJ);
-
-                    } catch(PDOException $e){
-
-                        //ERRO 527
-                        //MENSAGEM: Erro ao buscar facebook_usuario do usuario 2
-
-                        header('Ed-Return-Message: Erro ao buscar facebook_usuario do usuario 2', true, 527);
-                        echo '[]';
-
-                        die();
-
-                        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-                    }
-
-                    //######## CHAT ########//
-                    
-                    try{
-                    	//segue com a API com o fluxo para criar chat
-                    	ApiAppAndUserSessionCreate($usuario1->id_facebook, $usuario2->id_facebook, "DIALOG_CREATE", null);
-                    } catch(PDOException $e){
-
-                        //ERRO 543
-                        //MENSAGEM: Erro ao criar chat no QB
-
-                        header('Ed-Return-Message: Erro ao criar chat no QB', true, 543);	
-                        echo '[]';
-
-                        die();
-                    }
-					
-					//Insere na tabela e retorna match = 1
-
-                    $sql = "INSERT INTO MATCHES (id_usuario1, id_usuario2, id_local, dt_match) VALUES (:id_usuario1, :id_usuario2, :id_local, NOW())";
-
-                    try{
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bindParam("id_usuario1",$like->id_usuario1);
-                    $stmt->bindParam("id_usuario2",$like->id_usuario2);
-                    $stmt->bindParam("id_local",$like->id_local);
-                    $stmt->execute();
-
-                    } catch(PDOException $e){
-
-                        //ERRO 528
-                        //MENSAGEM: Erro ao criar match
-
-                        header('Ed-Return-Message: Erro ao criar match', true, 528);
-                        echo '[]';
-
-                        die();
-
-                        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-
-                    }
-                    $like->match = "1";
-					
-					//Busca o id_qb do usuario de destino para abertura do chat pelo app
-					
-					try{
-						$sql = "SELECT id_qb FROM USUARIO WHERE id_usuario = :id_usuario2";
-						$stmt = $conn->prepare($sql);
-						$stmt->bindParam("id_usuario2",$like->id_usuario2);
-						$stmt->execute();
-						$usuario2 = $stmt->fetch(PDO::FETCH_OBJ);
-
-                    } catch(PDOException $e){
-
-                        //ERRO 527
-                        //MENSAGEM: Erro ao buscar ID do QB do usuario 2
-
-                        header('Ed-Return-Message: Erro ao buscar ID do QB do usuario 2', true, 527);
-                        echo '[]';
-
-                        die();
-
-                        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-                    }
-
-                    $like->quickblox_usuario = $usuario2->id_qb;
-            }
-
-            $like->id_output = "1";
-            $like->desc_output = "Like realizado com sucesso.";
-
-        //Se ja ha o like valido, da deslike
-        }
-        else{
-
-            $sql = "UPDATE LIKES SET dt_expiracao = NOW() WHERE id_like = :id_like";
-
-            try{
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bindParam("id_like",$like_existente->id_like);
-                    $stmt->execute();
-
-            } catch(PDOException $e){
-
-                //ERRO 529
-                //MENSAGEM: Erro ao descurtir
-
-                header('Ed-Return-Message: Erro ao descurtir', true, 529);
-                echo '[]';
-
-                die();
-
-                //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
-            }
-
-            $like->id_output = "4";
-            $like->desc_output = "Deslike realizado com sucesso.";
-
-        }
-
-        echo json_encode($like);
-       
-    }	
     
+    //Verifica se por alguma inconsistência dos aplicativos, já existe um match dos dois usuários
+    
+    $sql = "SELECT 1 FROM MATCHES WHERE (id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2) OR (id_usuario1 = :id_usuario2 AND id_usuario2 = :id_usuario1) AND DT_BLOCK IS NULL";
+    try{
+    	$conn = getConn();
+    	$stmt = $conn->prepare($sql);
+    	$stmt->bindParam("id_usuario1",$like->id_usuario1);
+    	$stmt->bindParam("id_usuario2",$like->id_usuario2);
+    	$stmt->execute();
+    
+    } catch(PDOException $e){
+    
+    	//ERRO 525
+        //MENSAGEM: Erro ao verificar se houve match
+
+        header('Ed-Return-Message: Erro ao verificar se houve match', true, 525);
+        echo '[]';
+
+        die();
+    
+    	//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+    }
+    
+    //Se não existe match entre os dois, prossegue a rotina.
+    if(!$stmt->fetchObject()){
+
+	    //Verifica se o usuario destino do like ainda tem um checkin valido
+	
+	    $sql = "SELECT 1 FROM CHECKIN WHERE id_usuario = :id_usuario2 AND id_local = :id_local AND DT_CHECKOUT IS NULL";
+	    try{
+	            $stmt = $conn->prepare($sql);
+	            $stmt->bindParam("id_usuario2",$like->id_usuario2);
+	            $stmt->bindParam("id_local",$like->id_local);
+	            $stmt->execute();
+	
+	    } catch(PDOException $e){
+	
+	        //ERRO 521
+	        //MENSAGEM: Erro ao buscar checkin do usuario de destino
+	
+	        header('Ed-Return-Message: Erro ao buscar checkin do usuario de destino', true, 521);
+	        echo '[]';
+	
+	        die();
+	
+	        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+	    }
+	
+	    //Se o usuario de destino fez o checkout
+	    if(!$stmt->fetchObject()){ 
+	
+	        //ERRO 522
+	        //MENSAGEM: Usuario de destino realizou checkout
+	
+	        header('Ed-Return-Message: Usuario de destino realizou checkout', true, 522);
+	        echo '[]';
+	
+	        die();
+	
+	        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+	
+	    }
+	    else{ //Se o checkin do usuario destino ainda e valido
+		
+	        //Verifica se o usuario ja foi curtido ou não
+	
+	        $sql = "SELECT id_like FROM LIKES WHERE id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2 AND dt_expiracao IS NULL";
+	        try{
+	                $stmt = $conn->prepare($sql);
+	                $stmt->bindParam("id_usuario1",$like->id_usuario1);
+	                $stmt->bindParam("id_usuario2",$like->id_usuario2);
+	                $stmt->execute();
+	
+	                $like_existente = $stmt->fetch(PDO::FETCH_OBJ);
+	
+	        } catch(PDOException $e){
+	
+	            //ERRO 523
+	            //MENSAGEM: Erro ao verificar se ja existe like
+	
+	            header('Ed-Return-Message: Erro ao verificar se ja existe like', true, 523);
+	            echo '[]';
+	
+	            die();
+	
+	            //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+	
+	        }
+	
+	        //Se ja não existe like valido
+	        if(!$like_existente){
+	
+	            //Da o like
+	
+	            $sql = "INSERT INTO LIKES (id_usuario1, id_usuario2, id_local, dt_like) VALUES (:id_usuario1, :id_usuario2, :id_local, NOW())";
+	            try{
+	                    $stmt = $conn->prepare($sql);
+	                    $stmt->bindParam("id_usuario1",$like->id_usuario1);
+	                    $stmt->bindParam("id_usuario2",$like->id_usuario2);
+	                    $stmt->bindParam("id_local",$like->id_local);
+	                    $stmt->execute();
+	                    $like->id_like = $conn->lastInsertId();
+	
+	            } catch(PDOException $e){
+	
+	                //ERRO 524
+	                //MENSAGEM: Erro ao curtir
+	
+	                header('Ed-Return-Message: Erro ao curtir', true, 524);
+	                echo '[]';
+	
+	                die();
+	
+	                //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+	
+	            }
+	
+	            //Verifica se houve o match
+	
+	            //Verifica se o outro usuario ja deu o like tambem, e se o mesmo ainda e valido
+	            try{
+	                    $sql = "SELECT 1 FROM LIKES WHERE id_usuario1 = :id_usuario2 AND id_usuario2 = :id_usuario1 AND DT_EXPIRACAO IS NULL"; 
+	                    $stmt = $conn->prepare($sql);
+	                    $stmt->bindParam("id_usuario1",$like->id_usuario1);
+	                    $stmt->bindParam("id_usuario2",$like->id_usuario2);
+	                    $stmt->execute();
+	
+	            } catch(PDOException $e){
+	
+	                //ERRO 525
+	                //MENSAGEM: Erro ao verificar se houve match
+	
+	                header('Ed-Return-Message: Erro ao verificar se houve match', true, 525);
+	                echo '[]';
+	
+	                die();
+	
+	                //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+	            }
+	
+	            //Retorna match = 0 se não houver retorno do select
+	
+	            if(!$stmt->fetchObject())
+	                    $like->match = "0";
+	            else{	//--------------------------######## MATCH ########--------------------------//
+	
+	                    
+						
+						// Busca os id_facebook dos usuarios
+	
+	                    try{
+	                    $sql = "SELECT id_facebook FROM USUARIO WHERE id_usuario = :id_usuario1";
+	                    $stmt = $conn->prepare($sql);
+	                    $stmt->bindParam("id_usuario1",$like->id_usuario1);
+	                    $stmt->execute();
+	                    $usuario1 = $stmt->fetch(PDO::FETCH_OBJ);
+	
+	                    } catch(PDOException $e){
+	
+	                        //ERRO 526
+	                        //MENSAGEM: Erro ao buscar facebook_usuario do usuario 1
+	
+	                        header('Ed-Return-Message: Erro ao buscar facebook_usuario do usuario 1', true, 526);
+	                        echo '[]';
+	
+	                        die();
+	
+	                        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+	                    }
+	
+	                    try{
+	                    $sql = "SELECT id_facebook FROM USUARIO WHERE id_usuario = :id_usuario2";
+	                    $stmt = $conn->prepare($sql);
+	                    $stmt->bindParam("id_usuario2",$like->id_usuario2);
+	                    $stmt->execute();
+	                    $usuario2 = $stmt->fetch(PDO::FETCH_OBJ);
+	
+	                    } catch(PDOException $e){
+	
+	                        //ERRO 527
+	                        //MENSAGEM: Erro ao buscar facebook_usuario do usuario 2
+	
+	                        header('Ed-Return-Message: Erro ao buscar facebook_usuario do usuario 2', true, 527);
+	                        echo '[]';
+	
+	                        die();
+	
+	                        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+	                    }
+	
+	                    //######## CHAT ########//
+	                    
+	                    try{
+	                    	//segue com a API com o fluxo para criar chat
+	                    	ApiAppAndUserSessionCreate($usuario1->id_facebook, $usuario2->id_facebook, "DIALOG_CREATE", null);
+	                    } catch(PDOException $e){
+	
+	                        //ERRO 543
+	                        //MENSAGEM: Erro ao criar chat no QB
+	
+	                        header('Ed-Return-Message: Erro ao criar chat no QB', true, 543);	
+	                        echo '[]';
+	
+	                        die();
+	                    }
+						
+						//Insere na tabela e retorna match = 1
+	
+	                    $sql = "INSERT INTO MATCHES (id_usuario1, id_usuario2, id_local, dt_match) VALUES (:id_usuario1, :id_usuario2, :id_local, NOW())";
+	
+	                    try{
+	                    $stmt = $conn->prepare($sql);
+	                    $stmt->bindParam("id_usuario1",$like->id_usuario1);
+	                    $stmt->bindParam("id_usuario2",$like->id_usuario2);
+	                    $stmt->bindParam("id_local",$like->id_local);
+	                    $stmt->execute();
+	
+	                    } catch(PDOException $e){
+	
+	                        //ERRO 528
+	                        //MENSAGEM: Erro ao criar match
+	
+	                        header('Ed-Return-Message: Erro ao criar match', true, 528);
+	                        echo '[]';
+	
+	                        die();
+	
+	                        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+	
+	                    }
+	                    $like->match = "1";
+						
+						//Busca o id_qb do usuario de destino para abertura do chat pelo app
+						
+						try{
+							$sql = "SELECT id_qb FROM USUARIO WHERE id_usuario = :id_usuario2";
+							$stmt = $conn->prepare($sql);
+							$stmt->bindParam("id_usuario2",$like->id_usuario2);
+							$stmt->execute();
+							$usuario2 = $stmt->fetch(PDO::FETCH_OBJ);
+	
+	                    } catch(PDOException $e){
+	
+	                        //ERRO 527
+	                        //MENSAGEM: Erro ao buscar ID do QB do usuario 2
+	
+	                        header('Ed-Return-Message: Erro ao buscar ID do QB do usuario 2', true, 527);
+	                        echo '[]';
+	
+	                        die();
+	
+	                        //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+	                    }
+	
+	                    $like->quickblox_usuario = $usuario2->id_qb;
+	            }
+	
+	            $like->id_output = "1";
+	            $like->desc_output = "Like realizado com sucesso.";
+	
+	        //Se ja ha o like valido, da deslike
+	        }
+	        else{
+	
+	            $sql = "UPDATE LIKES SET dt_expiracao = NOW() WHERE id_like = :id_like";
+	
+	            try{
+	                    $stmt = $conn->prepare($sql);
+	                    $stmt->bindParam("id_like",$like_existente->id_like);
+	                    $stmt->execute();
+	
+	            } catch(PDOException $e){
+	
+	                //ERRO 529
+	                //MENSAGEM: Erro ao descurtir
+	
+	                header('Ed-Return-Message: Erro ao descurtir', true, 529);
+	                echo '[]';
+	
+	                die();
+	
+	                //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+	            }
+	
+	            $like->id_output = "4";
+	            $like->desc_output = "Deslike realizado com sucesso.";
+	
+	        }
+	
+	        echo json_encode($like);
+	       
+	    }	
+    } 
     $conn = null;
 }
 
@@ -1307,7 +1332,7 @@ function verificaCheckinUsuario($id_usuario)
 {
     $sql = "SELECT LOCAL.id_local, LOCAL.nome, LOCAL.latitude, LOCAL.longitude, CASE WHEN PROMO.promo_checkin IS NULL OR PROMO.promo_checkin = 0 THEN 0 ELSE 1 END AS destaque
             FROM LOCAL JOIN CHECKIN ON LOCAL.ID_LOCAL = CHECKIN.ID_LOCAL
-    		     LEFT JOIN PROMO ON (LOCAL.id_local = PROMO.id_local AND NOW() between PROMO.dt_inicio AND PROMO.dt_fim)
+    		     LEFT JOIN PROMO ON (LOCAL.id_local = PROMO.id_local AND NOW() between PROMO.dt_inicio AND PROMO.dt_fim AND PROMO.dt_fim_lote IS NULL)
             WHERE CHECKIN.ID_USUARIO = :id_usuario
               AND CHECKIN.DT_CHECKOUT IS NULL";
     try{
