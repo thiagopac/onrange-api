@@ -155,7 +155,7 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
             //ERRO 502
             //MENSAGEM: Erro na listagem de locais
             
-            header('Ed-Return-Message: Erro na listagem de locais', true, 502);
+            header('HTTP/1.1 502 Erro na listagem de locais');
             echo '[]';
                                 
             die();
@@ -183,7 +183,7 @@ function adicionaLocal()
         //ERRO 557
         //MENSAGEM: Erro ao buscar ultimo local criado pelo usuario
 
-        header('Ed-Return-Message: Erro ao buscar ultimo local criado pelo usuario', true, 557);
+        header('HTTP/1.1 557 Erro ao buscar ultimo local criado pelo usuario');
         echo '[]';
 
         die();
@@ -220,7 +220,7 @@ function adicionaLocal()
             //ERRO 503
             //MENSAGEM: Erro ao adicionar novo local
 
-            header('Ed-Return-Message: Erro ao adicionar novo local', true, 503);
+            header('HTTP/1.1 503 Erro ao adicionar novo local');
             echo '[]';
             
             //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
@@ -242,7 +242,7 @@ function adicionaLocal()
             //ERRO 504
             //MENSAGEM: Erro ao adicionar novo local em checkins correntes
 
-            header('Ed-Return-Message: Erro ao adicionar novo local em checkins correntes', true, 504);
+            header('HTTP/1.1 504 Erro ao adicionar novo local em checkins correntes');
             echo '[]';
 
             die();
@@ -268,7 +268,7 @@ function adicionaLocal()
             //ERRO 505
             //MENSAGEM: Erro ao verificar checkin corrente do usuario
 
-            header('Ed-Return-Message: Erro ao verificar checkin corrente do usuario', true, 505);
+            header('HTTP/1.1 505 Erro ao verificar checkin corrente do usuario');
             echo '[]';
 
             die();
@@ -292,7 +292,7 @@ function adicionaLocal()
                     //ERRO 519
                     //MENSAGEM: Erro ao realizar checkout no local anterior
 
-                    header('Ed-Return-Message: Erro ao realizar checkout no local anterior', true, 519);
+                    header('HTTP/1.1 519 Erro ao realizar checkout no local anterior');
                     echo '[]';
 
                     die();
@@ -315,7 +315,7 @@ function adicionaLocal()
                     //ERRO 506
                     //MENSAGEM: Erro ao decrementar tabela de checkins correntes
 
-                    header('Ed-Return-Message: Erro ao decrementar tabela de checkins correntes', true, 506);
+                    header('HTTP/1.1 506 Erro ao decrementar tabela de checkins correntes');
                     echo '[]';
 
                     die();
@@ -338,7 +338,7 @@ function adicionaLocal()
                 //ERRO 535
                 //MENSAGEM: Erro ao expirar os likes do usuario
 
-                header('Ed-Return-Message: Erro ao expirar os likes do usuario', true, 535);	
+                header('HTTP/1.1 535 Erro ao expirar os likes do usuario');	
                 echo '[]';
 
                 die();
@@ -360,7 +360,7 @@ function adicionaLocal()
             //ERRO 507
             //MENSAGEM: Erro ao fazer checkin no local criado
 
-            header('Ed-Return-Message: Erro ao fazer checkin no local criado', true, 507);
+            header('HTTP/1.1 507 Erro ao fazer checkin no local criado');
             echo '[]';
 
             die();
@@ -380,7 +380,7 @@ function adicionaLocal()
             //ERRO 520
             //MENSAGEM: Erro ao incrementar tabela de checkins correntes
 
-            header('Ed-Return-Message: Erro ao incrementar tabela de checkins correntes', true, 520);
+            header('HTTP/1.1 520 Erro ao incrementar tabela de checkins correntes');
             echo '[]';
 
             die();
@@ -396,7 +396,7 @@ function adicionaLocal()
         //ERRO 558
         //MENSAGEM: Ultimo local criado abaixo do tempo minimo
 
-        header('Ed-Return-Message: Ultimo local criado abaixo do tempo minimo', true, 558);
+        header('HTTP/1.1 558 Ultimo local criado abaixo do tempo minimo');
         echo '[]';
 
         die();
@@ -432,7 +432,7 @@ function adicionaUsuario()
 		//ERRO 509
 		//MENSAGEM: Erro ao adicionar novo usuario
 
-		header('Ed-Return-Message: Erro ao adicionar novo usuario', true, 509);
+		header('HTTP/1.1 509 Erro ao adicionar novo usuario');
 		echo '[]';
 
 		die();
@@ -467,7 +467,7 @@ function adicionaCheckin()
             //ERRO 513
             //MENSAGEM: Erro ao buscar checkins
 
-            header('Ed-Return-Message: Erro ao buscar checkins', true, 513);
+            header('HTTP/1.1 513 Erro ao buscar checkins');
             echo '[]';
 
             die();
@@ -502,7 +502,7 @@ function adicionaCheckin()
               //ERRO 514
               //MENSAGEM: Erro ao fazer checkout pre-checkin
 
-              header('Ed-Return-Message: Erro ao fazer checkout pre-checkin', true, 514);
+              header('HTTP/1.1 514 Erro ao fazer checkout pre-checkin');
               echo '[]';
 
               die();
@@ -521,7 +521,7 @@ function adicionaCheckin()
               //ERRO 515
               //MENSAGEM: Erro ao decrementar tabela de checkins correntes
 
-              header('Ed-Return-Message: Erro ao decrementar tabela de checkins correntes', true, 515);
+              header('HTTP/1.1 515 Erro ao decrementar tabela de checkins correntes');
               echo '[]';
 
               die();
@@ -544,7 +544,7 @@ function adicionaCheckin()
                 //ERRO 535
                 //MENSAGEM: Erro ao expirar os likes do usuario
 
-                header('Ed-Return-Message: Erro ao expirar os likes do usuario', true, 535);	
+                header('HTTP/1.1 535 Erro ao expirar os likes do usuario');	
                 echo '[]';
 
                 die();
@@ -555,7 +555,7 @@ function adicionaCheckin()
              //ERRO 516
              //MENSAGEM: Checkin anterior com tempo inferior ao minimo estabelecido.
 
-             header('Ed-Return-Message: Checkin anterior com tempo inferior ao minimo estabelecido', true, 516);
+             header('HTTP/1.1 516 Checkin anterior com tempo inferior ao minimo estabelecido');
              echo '[]';
 
              die();
@@ -585,7 +585,7 @@ function adicionaCheckin()
             //ERRO 517
             //MENSAGEM: Erro ao fazer checkin
 
-            header('Ed-Return-Message: Erro ao fazer checkin', true, 517);
+            header('HTTP/1.1 517 Erro ao fazer checkin');
             echo '[]';
 
             die();
@@ -604,7 +604,7 @@ function adicionaCheckin()
             //ERRO 518
             //MENSAGEM: Erro ao incrementar tabela de checkins correntes
 
-            header('Ed-Return-Message: Erro ao incrementar tabela de checkins correntes', true, 518);
+            header('HTTP/1.1 518 Erro ao incrementar tabela de checkins correntes');
             echo '[]';
 
             die();
@@ -637,7 +637,7 @@ function adicionaCheckin()
         //ERRO 537
         //MENSAGEM: Erro ao buscar local
 
-        header('Ed-Return-Message: Erro ao buscar local', true, 537);	
+        header('HTTP/1.1 537 Erro ao buscar local');	
         echo '[]';
 
         die();
@@ -675,7 +675,7 @@ function adicionaLike()
     	//ERRO 525
         //MENSAGEM: Erro ao verificar se houve match
 
-        header('Ed-Return-Message: Erro ao verificar se houve match', true, 525);
+        header('HTTP/1.1 525 Erro ao verificar se houve match');
         echo '[]';
 
         die();
@@ -700,7 +700,7 @@ function adicionaLike()
 	        //ERRO 521
 	        //MENSAGEM: Erro ao buscar checkin do usuario de destino
 	
-	        header('Ed-Return-Message: Erro ao buscar checkin do usuario de destino', true, 521);
+	        header('HTTP/1.1 521 Erro ao buscar checkin do usuario de destino');
 	        echo '[]';
 	
 	        die();
@@ -714,8 +714,9 @@ function adicionaLike()
 	        //ERRO 522
 	        //MENSAGEM: Usuario de destino realizou checkout
 	
-	        header('Ed-Return-Message: Usuario de destino realizou checkout', true, 522);
-	        echo '[]';
+	    	header('HTTP/1.1 522 Usuario de destino realizou checkout');
+	    	
+	    	echo '[]';
 	
 	        die();
 	
@@ -740,7 +741,7 @@ function adicionaLike()
 	            //ERRO 523
 	            //MENSAGEM: Erro ao verificar se ja existe like
 	
-	            header('Ed-Return-Message: Erro ao verificar se ja existe like', true, 523);
+	            header('HTTP/1.1 523 Erro ao verificar se ja existe like');
 	            echo '[]';
 	
 	            die();
@@ -768,7 +769,7 @@ function adicionaLike()
 	                //ERRO 524
 	                //MENSAGEM: Erro ao curtir
 	
-	                header('Ed-Return-Message: Erro ao curtir', true, 524);
+	                header('HTTP/1.1 524 Erro ao curtir');
 	                echo '[]';
 	
 	                die();
@@ -792,7 +793,7 @@ function adicionaLike()
 	                //ERRO 525
 	                //MENSAGEM: Erro ao verificar se houve match
 	
-	                header('Ed-Return-Message: Erro ao verificar se houve match', true, 525);
+	                header('HTTP/1.1 525 Erro ao verificar se houve match');
 	                echo '[]';
 	
 	                die();
@@ -822,7 +823,7 @@ function adicionaLike()
 	                        //ERRO 526
 	                        //MENSAGEM: Erro ao buscar facebook_usuario do usuario 1
 	
-	                        header('Ed-Return-Message: Erro ao buscar facebook_usuario do usuario 1', true, 526);
+	                        header('HTTP/1.1 526 Erro ao buscar facebook_usuario do usuario 1');
 	                        echo '[]';
 	
 	                        die();
@@ -842,7 +843,7 @@ function adicionaLike()
 	                        //ERRO 527
 	                        //MENSAGEM: Erro ao buscar facebook_usuario do usuario 2
 	
-	                        header('Ed-Return-Message: Erro ao buscar facebook_usuario do usuario 2', true, 527);
+	                        header('HTTP/1.1 527 Erro ao buscar facebook_usuario do usuario 2');
 	                        echo '[]';
 	
 	                        die();
@@ -860,7 +861,7 @@ function adicionaLike()
 	                        //ERRO 543
 	                        //MENSAGEM: Erro ao criar chat no QB
 	
-	                        header('Ed-Return-Message: Erro ao criar chat no QB', true, 543);	
+	                        header('HTTP/1.1 543 Erro ao criar chat no QB');	
 	                        echo '[]';
 	
 	                        die();
@@ -882,7 +883,7 @@ function adicionaLike()
 	                        //ERRO 528
 	                        //MENSAGEM: Erro ao criar match
 	
-	                        header('Ed-Return-Message: Erro ao criar match', true, 528);
+	                        header('HTTP/1.1 528 Erro ao criar match');
 	                        echo '[]';
 	
 	                        die();
@@ -906,7 +907,7 @@ function adicionaLike()
 	                        //ERRO 527
 	                        //MENSAGEM: Erro ao buscar ID do QB do usuario 2
 	
-	                        header('Ed-Return-Message: Erro ao buscar ID do QB do usuario 2', true, 527);
+	                        header('HTTP/1.1 527 Erro ao buscar ID do QB do usuario 2');
 	                        echo '[]';
 	
 	                        die();
@@ -936,7 +937,7 @@ function adicionaLike()
 	                //ERRO 529
 	                //MENSAGEM: Erro ao descurtir
 	
-	                header('Ed-Return-Message: Erro ao descurtir', true, 529);
+	                header('HTTP/1.1 529 Erro ao descurtir');
 	                echo '[]';
 	
 	                die();
@@ -978,7 +979,7 @@ function loginUsuario()
         //ERRO 530
         //MENSAGEM: Erro ao buscar usuario
 
-        header('Ed-Return-Message: Erro ao buscar usuario', true, 530);	
+        header('HTTP/1.1 530 Erro ao buscar usuario');	
         echo '[]';
 
         die();
@@ -993,7 +994,7 @@ function loginUsuario()
             //ERRO 501
             //MENSAGEM: Usuario bloqueado
 
-            header('Ed-Return-Message: Usuario bloqueado', true, 501);	
+            header('HTTP/1.1 501 Usuario bloqueado');	
             echo '[]';
 
             die();	
@@ -1016,7 +1017,7 @@ function loginUsuario()
                     //ERRO 546
                     //MENSAGEM: Erro ao remover data de exclusao do usuario
 
-                    header('Ed-Return-Message: Erro ao remover data de exclusao do usuario', true, 546);	
+                    header('HTTP/1.1 546 Erro ao remover data de exclusao do usuario');	
                     echo '[]';
 
                     die();
@@ -1081,7 +1082,7 @@ function loginUsuario()
                         //ERRO 511
                         //MENSAGEM: Erro ao autalizar usuario
 
-                        header('Ed-Return-Message: Erro ao autalizar usuario', true, 511);
+                        header('HTTP/1.1 511 Erro ao autalizar usuario');
                         echo '[]';
 
                         die();
@@ -1105,7 +1106,7 @@ function loginUsuario()
         //ERRO 500
         //MENSAGEM: Usuario inexistente
 
-        header('Ed-Return-Message: Usuario inexistente', true, 500);	
+        header('HTTP/1.1 500 Usuario inexistente');	
         echo '[]';
 
         die();
@@ -1183,7 +1184,7 @@ function listaUsuariosCheckin($id_local,$sexo,$id_usuario)
         //ERRO 531
         //MENSAGEM: Erro na listagem de usuarios
 
-        header('Ed-Return-Message: Erro na listagem de usuarios', true, 531);	
+        header('HTTP/1.1 531 Erro na listagem de usuarios');	
         echo '[]';
 
         die();
@@ -1214,7 +1215,7 @@ function listaUsuariosCheckinWidget($id_local)
 		//ERRO 531
 		//MENSAGEM: Erro na listagem de usuarios
 
-		header('Ed-Return-Message: Erro na listagem de usuarios', true, 531);
+		header('HTTP/1.1 531 Erro na listagem de usuarios');
 		echo '[]';
 
 		die();
@@ -1239,7 +1240,7 @@ function fazCheckout()
         //ERRO 532
         //MENSAGEM: Erro ao buscar checkin
 
-        header('Ed-Return-Message: Erro ao buscar checkin', true, 532);	
+        header('HTTP/1.1 532 Erro ao buscar checkin');	
         echo '[]';
 
         die();
@@ -1265,7 +1266,7 @@ function fazCheckout()
             
         	//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
 
-            header('Ed-Return-Message: Erro ao fazer checkout', true, 533);	
+            header('HTTP/1.1 533 Erro ao fazer checkout');	
             echo '[]';
 
             die();
@@ -1286,7 +1287,7 @@ function fazCheckout()
             //ERRO 534
             //MENSAGEM: Erro ao decrementar tabela de checkins correntes
 
-            header('Ed-Return-Message: Erro ao fazer checkout', true, 534);	
+            header('HTTP/1.1 534 Erro ao fazer checkout');	
             echo '[]';
 
             die();
@@ -1307,7 +1308,7 @@ function fazCheckout()
             //ERRO 535
             //MENSAGEM: Erro ao expirar os likes do usuario
 
-            header('Ed-Return-Message: Erro ao expirar os likes do usuario', true, 535);	
+            header('HTTP/1.1 535 Erro ao expirar os likes do usuario');	
             echo '[]';
 
             die();
@@ -1319,7 +1320,7 @@ function fazCheckout()
         //ERRO 536
         //MENSAGEM: Nao existe checkin corrente para o usuario
 
-        header('Ed-Return-Message: Nao existe checkin corrente para o usuario', true, 536);	
+        header('HTTP/1.1 536 Nao existe checkin corrente para o usuario');	
         echo '[]';
 
         die();
@@ -1347,7 +1348,7 @@ function verificaCheckinUsuario($id_usuario)
         //ERRO 537
         //MENSAGEM: Erro ao buscar local
 
-        header('Ed-Return-Message: Erro ao buscar local', true, 537);	
+        header('HTTP/1.1 537 Erro ao buscar local');	
         echo '[]';
 
         die();
@@ -1372,7 +1373,7 @@ function verificaCheckinUsuario($id_usuario)
             //ERRO 538
             //MENSAGEM: Erro ao buscar quantidade de checkins
 
-            header('Ed-Return-Message: Erro ao buscar quantidade de checkins', true, 538);	
+            header('HTTP/1.1 538 Erro ao buscar quantidade de checkins');	
             echo '[]';
 
             die();
@@ -1413,7 +1414,7 @@ function listaMatches($id_usuario)
         //ERRO 539
         //MENSAGEM: Erro ao buscar matches
 
-        header('Ed-Return-Message: Erro ao buscar matches', true, 539);	
+        header('HTTP/1.1 539 Erro ao buscar matches');	
         echo '[]';
 
         die();
@@ -1445,7 +1446,7 @@ function listaChats($id_usuario)
 		//ERRO 539
 		//MENSAGEM: Erro ao buscar matches
 
-		header('Ed-Return-Message: Erro ao buscar chats', true, 539);
+		header('HTTP/1.1 539 Erro ao buscar chats');
 		echo '[]';
 
 		die();
@@ -1476,7 +1477,7 @@ function unMatch()
         //ERRO 544
         //MENSAGEM: Erro ao apagar chat no QB
 
-        header('Ed-Return-Message: Erro ao apagar chat no QB', true, 544);	
+        header('HTTP/1.1 544 Erro ao apagar chat no QB');	
         echo '[]';
 
         die();
@@ -1500,7 +1501,7 @@ function unMatch()
         //ERRO 545
         //MENSAGEM: Erro ao buscar ID do usuario 1
 
-        header('Ed-Return-Message: Erro ao buscar ID do usuario 1', true, 546);	
+        header('HTTP/1.1 XXX Erro ao buscar ID do usuario 1');	
         echo '[]';
 
         die();
@@ -1522,7 +1523,7 @@ function unMatch()
         //ERRO 545
         //MENSAGEM: Erro ao buscar ID do usuario 2
 
-        header('Ed-Return-Message: Erro ao buscar ID do usuario 2', true, 545);	
+        header('HTTP/1.1 XXX Erro ao buscar ID do usuario 2');	
         echo '[]';
 
         die();
@@ -1544,7 +1545,7 @@ function unMatch()
         //ERRO 540
         //MENSAGEM: Erro ao desfazer match
 
-        header('Ed-Return-Message: Erro ao desfazer match', true, 540);	
+        header('HTTP/1.1 XXX Erro ao desfazer match');	
         echo '[]';
 
         die();
@@ -1567,7 +1568,7 @@ function unMatch()
         //ERRO 560
         //MENSAGEM: Erro ao desfazer likes
 
-        header('Ed-Return-Message: Erro ao desfazer likes', true, 560);	
+        header('HTTP/1.1 XXX Erro ao desfazer likes');	
         echo '[]';
 
         die();
@@ -1600,7 +1601,7 @@ function listaTodosUsuariosQuickblox()
             //ERRO 541
             //MENSAGEM: Erro ao enviar requisicao para o QB
 
-            header('Ed-Return-Message: Erro ao enviar requisicao para o QB', true, 541);	
+            header('HTTP/1.1 541 Erro ao enviar requisicao para o QB');	
             echo '[]';
 
             die();
@@ -2450,7 +2451,7 @@ function apagaUsuario()
         //ERRO 542
         //MENSAGEM: Erro ao apagar usuario
 
-        header('Ed-Return-Message: Erro ao apagar usuario', true, 542);	
+        header('HTTP/1.1 542 Erro ao apagar usuario');	
         echo '[]';
 
         die();
@@ -2465,7 +2466,7 @@ function apagaUsuario()
         //ERRO 542
         //MENSAGEM: Erro ao apagar usuario
 
-        header('Ed-Return-Message: Erro ao apagar usuario', true, 542);	
+        header('HTTP/1.1 542 Erro ao apagar usuario');	
         echo '[]';
 
         die();
@@ -2496,7 +2497,7 @@ function listaPromosUsuario($id_usuario)
         //ERRO 547
         //MENSAGEM: Erro ao buscar promos
 
-        header('Ed-Return-Message: Erro ao buscar promos', true, 547);	
+        header('HTTP/1.1 547 Erro ao buscar promos');	
         echo '[]';
 
         die();
@@ -2526,7 +2527,7 @@ function marcaPromoVisualizado()
         //ERRO 548
         //MENSAGEM: Erro ao marcar promo visualizado
 
-        header('Ed-Return-Message: Erro ao marcar promo visualizado', true, 548);	
+        header('HTTP/1.1 548 Erro ao marcar promo visualizado');	
         echo '[]';
 
         die();
@@ -2541,7 +2542,7 @@ function marcaPromoVisualizado()
         //ERRO 548
         //MENSAGEM: Erro ao marcar promo visualizado
 
-        header('Ed-Return-Message: Erro ao marcar promo visualizado', true, 548);	
+        header('HTTP/1.1 548 Erro ao marcar promo visualizado');	
         echo '[]';
 
         die();
@@ -2571,7 +2572,7 @@ function apagaPromoUsuario()
         //ERRO 549
         //MENSAGEM: Erro ao apagar promo
 
-        header('Ed-Return-Message: Erro ao apagar promo', true, 549);	
+        header('HTTP/1.1 549 Erro ao apagar promo');	
         echo '[]';
 
         die();
@@ -2586,7 +2587,7 @@ function apagaPromoUsuario()
         //ERRO 549
         //MENSAGEM: Erro ao apagar promo
 
-        header('Ed-Return-Message: Erro ao apagar promo', true, 549);	
+        header('HTTP/1.1 549 Erro ao apagar promo');	
         echo '[]';
 
         die();
@@ -2622,7 +2623,7 @@ function adicionaPromoCheckin($id_promo,$id_usuario)
         //ERRO 550
         //MENSAGEM: Erro ao verificar codigos de promo disponiveis
 
-        //header('Ed-Return-Message: Erro ao verificar codigos de promo disponiveis', true, 550);
+        //header('HTTP/1.1 XXX Erro ao verificar codigos de promo disponiveis');
         //echo '[]';
 
         //die();
@@ -2652,7 +2653,7 @@ function adicionaPromoCheckin($id_promo,$id_usuario)
             //ERRO 551
             //MENSAGEM: Erro ao adicionar promo ao usuario
 
-            //header('Ed-Return-Message: Erro ao adicionar promo ao usuario', true, 551);
+            //header('HTTP/1.1 XXX Erro ao adicionar promo ao usuario');
             //echo '[]';
 
             //die();
@@ -2667,7 +2668,7 @@ function adicionaPromoCheckin($id_promo,$id_usuario)
             //ERRO 553
             //MENSAGEM: Erro ao marcar codigo como utilizado
 
-            //header('Ed-Return-Message: Erro ao marcar codigo como utilizado', true, 553);	
+            //header('HTTP/1.1 XXX Erro ao marcar codigo como utilizado');	
             //echo '[]';
 
             //die();
@@ -2699,7 +2700,7 @@ function adicionaPromoCheckin($id_promo,$id_usuario)
         //ERRO 552
         //MENSAGEM: Nao ha lote disponivel
 
-        //header('Ed-Return-Message: Nao ha lote disponivel', true, 552);
+        //header('HTTP/1.1 XXX Nao ha lote disponivel');
         //echo '[]';
 
         //die();
@@ -2738,7 +2739,7 @@ function verificaPromoLocal($id_local)
         //ERRO 554
         //MENSAGEM: Erro ao verificar promo
 
-        header('Ed-Return-Message: Erro ao verificar promo', true, 554);	
+        header('HTTP/1.1 554 Erro ao verificar promo');	
         echo '[]';
 
         die();
@@ -2772,7 +2773,7 @@ function verificaPromosNaoLidos($id_usuario)
         //ERRO 555
         //MENSAGEM: Erro ao verificar promos
 
-        header('Ed-Return-Message: Erro ao verificar promos', true, 555);	
+        header('HTTP/1.1 555 Erro ao verificar promos');	
         echo '[]';
 
         die();
@@ -2803,7 +2804,7 @@ function verificaConfiguracoes()
         //ERRO 556
         //MENSAGEM: Erro ao verificar configuracoes
 
-        header('Ed-Return-Message: Erro ao verificar configuracoes', true, 556);	
+        header('HTTP/1.1 556 Erro ao verificar configuracoes');	
         echo '[]';
 
         die();
@@ -2834,7 +2835,7 @@ function adicionaErroQB()
         //ERRO 559
         //MENSAGEM: Erro ao adicionar erro do QB
 
-        header('Ed-Return-Message: Erro ao adicionar erro do QB', true, 559);
+        header('HTTP/1.1 559 Erro ao adicionar erro do QB');
         echo '[]';
 
         die();
