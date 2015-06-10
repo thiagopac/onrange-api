@@ -26,6 +26,7 @@ $app->post('/checkin/adicionacheckin','adicionaCheckin'); //faz checkin
 $app->post('/like/adicionalike','adicionaLike'); //da like em alguem, em algum local
 $app->post('/usuario/login','loginUsuario'); //faz login de usuario
 $app->post('/erro/adicionaerroqb','adicionaErroQB'); //no caso de um erro no cadastro do usuario no QB, adiciona este registro à tabela
+$app->post('/push/enviapush','enviaPush'); //envia push através do QuickBlox
 
 //PUT METHODS
 $app->put('/checkin/fazcheckout','fazCheckout'); //cancela o checkin vigente do usuario
@@ -855,7 +856,7 @@ function adicionaLike()
 	                    
 	                    try{
 	                    	//segue com a API com o fluxo para criar chat
-	                    	ApiAppAndUserSessionCreate($usuario1->id_facebook, $usuario2->id_facebook, "DIALOG_CREATE", null);
+	                    	ApiAppAndUserSessionCreate($usuario1->id_facebook, $usuario2->id_facebook, "DIALOG_CREATE", null, null, null);
 	                    } catch(PDOException $e){
 	
 	                        //ERRO 543
@@ -1439,7 +1440,7 @@ function listaChats($id_usuario)
 		$chats = $stmt->fetch(PDO::FETCH_OBJ);
 		
 		//INATIVADO POIS N�O ESTAMOS USANDO ESSE M�TODO PARA TRAZER CHAT
-		//ApiAppAndUserSessionCreate($chats->facebook_usuario, null, "DIALOGS_RETRIEVE", null);
+		//ApiAppAndUserSessionCreate($chats->facebook_usuario, null, "DIALOGS_RETRIEVE", null, null, null);
 		
 	} catch(PDOException $e){
 
@@ -1469,8 +1470,8 @@ function unMatch()
     //fclose($FILE_LOG);
     
     try{
-        ApiAppAndUserSessionCreate($unmatch->facebook_usuario, null, "DIALOG_DELETE", $unmatch->id_chat);
-        ApiAppAndUserSessionCreate($unmatch->facebook_usuario2, null, "DIALOG_DELETE", $unmatch->id_chat);
+        ApiAppAndUserSessionCreate($unmatch->facebook_usuario, null, "DIALOG_DELETE", $unmatch->id_chat, null, null);
+        ApiAppAndUserSessionCreate($unmatch->facebook_usuario2, null, "DIALOG_DELETE", $unmatch->id_chat, null, null);
         //$unmatch->apaga_chat = CallAPIQB("DELETE","https://api.quickblox.com/chat/Dialog/" . $unmatch->id_chat . ".json","","QB-Token: " . $unmatch->qbtoken);
     } catch(PDOException $e){
 
@@ -1701,7 +1702,7 @@ function ApiAppSessionCreate($facebook_usuario, $email, $nome)
 }
 
 //Cria sess�o do aplicativo e tamb�m de um usu�rio j� existente. Serve para tarefas onde � necess�rio j� ter usu�rio no QB.
-function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2, $action, $chat)
+function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2, $action, $chat, $destinatarios, $mensagem)
 {
 	
 /*  -------------------  IMPORTANTE --------------------------
@@ -1713,7 +1714,7 @@ function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2, $act
  - DIALOG_CREATE (este action � para o fluxo criar um novo chat. Ele segue para ApiUserRetrieve, para descobrir o ID_QB do outro usu�rio e depois para ApiDialogMessageSend que cria novo chat enviando uma mensagem
  - DIALOG_DELETE (este action � para o fluxo apagar um chat. Ele segue para ApiDialogDelete e apaga o chat para o usu�rio 
  - DIALOGS_RETRIEVE --INATIVADO (este action � para o fluxo de trazer todos os chats de um usu�rio. Ele segue para ApiDialogsRetrieve, retorna o JSON do QuickBlox e destr�i a sess�o em seguida
-
+ - PUSH_SEND (este action é para o fluxo de enviar push para os usuários. Ele segue para ApiPushSend, envia os pushes e destrói a sessão
 */
 	
 	require 'config.php';
@@ -1822,6 +1823,10 @@ function ApiAppAndUserSessionCreate($facebook_usuario1, $facebook_usuario2, $act
 		$action = null;
 		//redirecionando o fluxo para apagar o chat
 		ApiDialogDelete($token, $chat);
+	}else if($action == "PUSH_SEND"){
+		$action = null;
+		//redirecionando o fluxo para apagar o chat
+		ApiPushSend($token, $destinatarios, $mensagem);
 	}
 }
 
@@ -2260,6 +2265,83 @@ function ApiDialogMessageSend($token, $occupant){
 	// Fechando conex�o
 	curl_close($curl);
 	
+	//redirecionando o fluxo para a fun��o de destrui��o da sess�o do aplicativo, sem necessitar da destrui��o da sess�o de usu�rio
+	ApiSessionDestroy($token);
+}
+
+function ApiPushSend($token, $destinatarios, $mensagem){
+	//Essa fun��o CRIA UM CHAT e j� envia uma mensagem pra ele
+
+	require 'config.php';
+
+	// API endpoint
+	$QB_API_ENDPOINT = "http://api.quickblox.com";
+	$QB_PATH_SESSION = "events.json";
+
+	if($log == 1){
+		//criando ou abrindo o log de cURL para escrita
+		$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/api_push_send-'.date('Y-m-d').".txt";
+		$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	}
+
+	// Criando corpo da requisi��o
+	$post_body = http_build_query(array('event'=>array(
+				'notification_type' => "push",
+				'environment' => "production",
+				'user'=>array('ids' => $destinatarios),
+				'message' => base64_encode($mensagem)
+				)));
+
+	// Configurando cURL
+	// Configurando cURL
+	$curl = curl_init();
+	curl_setopt($curl, CURLOPT_POST, true); // Usar POST
+	curl_setopt($curl, CURLOPT_HTTPHEADER,array('QuickBlox-REST-API-Version: 0.1.0')); //setando parâmetro no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_HTTPHEADER,array('Content-Type: application/json')); //setando parâmetro no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_HTTPHEADER, array("QB-Token: {$token}")); //setando QB-Token no header de acordo com especificação QuickBlox
+	curl_setopt($curl, CURLOPT_URL, $QB_API_ENDPOINT . '/' . $QB_PATH_SESSION); // Caminho completo é https://api.quickblox.com/session.json
+	curl_setopt($curl, CURLOPT_POSTFIELDS, $post_body); // Encapsulando o body
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // Recebendo a resposta
+	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false); //retirar em produção se não estiver funcionando pois ignora SSL
+	//curl_setopt($curl, CURLOPT_VERBOSE, 1); //liga o verbose, pra eu poder logar o fluxo cURL
+	curl_setopt($curl, CURLOPT_TIMEOUT, 40); //timeout com boa demora, pra não termos problemas com requsições expiriadas mto rápido
+	
+	if($log == 1){
+		curl_setopt($curl, CURLOPT_STDERR,$FILE_LOG); //definindo arquivo de log pro fluxo cURL
+	}
+
+	$PARAMETROS  = "QB-Token: {$token}\r\n";
+	$PARAMETROS .= "Mensagem: {$mensagem}\r\n";
+	$PARAMETROS .= "Destinatarios: {$destinatarios}\r\n\r\n";
+
+	if($log == 1){
+		fwrite($FILE_LOG, $PARAMETROS);
+	}
+
+	// Enviar request e pegar resposta
+	$response = curl_exec($curl);
+
+	// Checando resposta e escrevendo em log
+	if ($response) {
+		$respostaLog = "\r\n\r\nResposta: {$response}\r\n\r\n";
+	}else{
+		$error = curl_error($curl). '(' .curl_errno($curl). ')';
+		$respostaLog = "\r\n\r\nErro: {$error}\r\n\r\n";
+	}
+
+	if($log == 1){
+		fwrite($FILE_LOG, $respostaLog);
+
+		$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+
+		fwrite($FILE_LOG, $LOG_TXT);
+
+		fclose($FILE_LOG);
+	}
+
+	// Fechando conex�o
+	curl_close($curl);
+
 	//redirecionando o fluxo para a fun��o de destrui��o da sess�o do aplicativo, sem necessitar da destrui��o da sess�o de usu�rio
 	ApiSessionDestroy($token);
 }
@@ -2846,4 +2928,46 @@ function adicionaErroQB()
     echo json_encode($erroQB);
 
     $conn = null;
+}
+
+function enviaPush()
+{
+	$request = \Slim\Slim::getInstance()->request();
+	$pushObj = json_decode($request->getBody());
+
+	$sql = "SELECT ID_QB AS quickblox_usuario FROM USUARIO WHERE ID_FACEBOOK IN ({$pushObj->destinatarios})";
+	
+	try{
+		$conn = getConn();
+		$stmt = $conn->prepare($sql);
+		$stmt->execute();
+		
+		//echo $pushObj->destinatarios;
+		
+		$destinatariosResult = $stmt->fetchAll(PDO::FETCH_OBJ);
+		
+		$destinatariosArray = array();
+		
+		for ($i = 0; $i < count($destinatariosResult); $i++) {
+			$destinatariosArray[] = $destinatariosResult[$i]->quickblox_usuario;
+		}
+		
+		$destinatarios = implode (",", $destinatariosArray);
+		
+		//sempre fazer login com o usuário Onrange Mobile onrangemobile@gmail.com
+		ApiAppAndUserSessionCreate("100009466217846", null, "PUSH_SEND", null, $destinatarios, $pushObj->mensagem);
+	} catch(PDOException $e){
+
+		//ERRO 559
+		//MENSAGEM: Erro ao adicionar erro do QB
+
+		header('HTTP/1.1 559 Erro ao adicionar erro do QB');
+		echo '[]';
+
+		die();
+
+		//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+	}
+
+	$conn = null;
 }
