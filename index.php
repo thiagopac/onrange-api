@@ -663,7 +663,8 @@ function adicionaLike()
     
     //Verifica se por alguma inconsistência dos aplicativos, já existe um match dos dois usuários
     
-    $sql = "SELECT 1 FROM MATCHES WHERE (id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2) OR (id_usuario1 = :id_usuario2 AND id_usuario2 = :id_usuario1) AND DT_BLOCK IS NULL";
+    $sql = "SELECT 1 FROM MATCHES WHERE ((id_usuario1 = :id_usuario1 AND id_usuario2 = :id_usuario2) 
+    		OR (id_usuario1 = :id_usuario2 AND id_usuario2 = :id_usuario1)) AND DT_BLOCK IS NULL";
     try{
     	$conn = getConn();
     	$stmt = $conn->prepare($sql);
