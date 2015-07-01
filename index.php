@@ -966,7 +966,7 @@ function loginUsuario()
 
     //Verifica dados
 
-    $sql = "SELECT id_usuario, id_facebook AS facebook_usuario, id_qb AS quickblox_usuario, nome AS nome_usuario, sobrenome AS sobrenome_usuario, sexo AS sexo_usuario, dt_usuario, dt_exclusao, dt_bloqueio, email AS email_usuario, aniversario AS aniversario_usuario, cidade AS cidade_usuario, pais AS pais_usuario, idioma AS idioma_usuario
+    $sql = "SELECT id_usuario, id_facebook AS facebook_usuario, id_qb AS quickblox_usuario, nome AS nome_usuario, sobrenome AS sobrenome_usuario, sexo AS sexo_usuario, dt_usuario, dt_exclusao, dt_bloqueio, email AS email_usuario, aniversario AS aniversario_usuario, cidade AS cidade_usuario, pais AS pais_usuario, idioma AS idioma_usuario, logout 
             FROM USUARIO WHERE id_facebook = :id_facebook";
     try{
         $conn = getConn();
@@ -1042,6 +1042,7 @@ function loginUsuario()
             if(!isset($usuario->cidade_usuario)) $usuario->cidade_usuario = NULL;
             if(!isset($usuario->pais_usuario)) $usuario->pais_usuario = NULL;
             if(!isset($usuario->idioma_usuario)) $usuario->idioma_usuario = NULL;
+            if(!isset($usuario->logout)) $usuario->logout = 0;
             
             
             $registro_nome_usuario = $registro_usuario->nome_usuario;
@@ -1060,13 +1061,15 @@ function loginUsuario()
             $pais_usuario = $usuario->pais_usuario;
             $registro_idioma_usuario =  $registro_usuario->idioma_usuario;
             $idioma_usuario = $usuario->idioma_usuario;
+            $registro_logout =  $registro_usuario->logout;
+            $logout = $usuario->logout;
             
  
 
-            if($registro_nome_usuario != $nome_usuario || $registro_sobrenome_usuario != $sobrenome_usuario || $registro_sexo_usuario != $sexo_usuario || $registro_email_usuario != $email_usuario || $registro_aniversario_usuario != $aniversario_usuario || $registro_cidade_usuario != $cidade_usuario || $registro_pais_usuario != $pais_usuario || $registro_idioma_usuario != $idioma_usuario){
+            if($registro_nome_usuario != $nome_usuario || $registro_sobrenome_usuario != $sobrenome_usuario || $registro_sexo_usuario != $sexo_usuario || $registro_email_usuario != $email_usuario || $registro_aniversario_usuario != $aniversario_usuario || $registro_cidade_usuario != $cidade_usuario || $registro_pais_usuario != $pais_usuario || $registro_idioma_usuario != $idioma_usuario || $registro_logout != $logout){
             //Se houve alteracao em algum dos dados, atualiza o registro do usuario na base do Onrange
 
-                $sql = "UPDATE USUARIO SET nome = :nome_usuario, sobrenome = :sobrenome_usuario, sexo = :sexo_usuario, email = :email_usuario, aniversario = :aniversario_usuario, cidade = :cidade_usuario, pais = :pais_usuario, idioma = :idioma_usuario WHERE id_usuario = :id_usuario";
+                $sql = "UPDATE USUARIO SET nome = :nome_usuario, sobrenome = :sobrenome_usuario, sexo = :sexo_usuario, email = :email_usuario, aniversario = :aniversario_usuario, cidade = :cidade_usuario, pais = :pais_usuario, idioma = :idioma_usuario, logout = :logout WHERE id_usuario = :id_usuario";
                 try{
                         $stmt = $conn->prepare($sql);
                         $stmt->bindParam("id_usuario",$registro_usuario->id_usuario);
@@ -1078,6 +1081,7 @@ function loginUsuario()
                         $stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
                         $stmt->bindParam("pais_usuario",$usuario->pais_usuario);
                         $stmt->bindParam("idioma_usuario",$usuario->idioma_usuario);
+                        $stmt->bindParam("logout",$usuario->logout);
                         $stmt->execute();
                 } catch(PDOException $e){
 
