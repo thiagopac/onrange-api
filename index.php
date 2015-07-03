@@ -425,6 +425,7 @@ function adicionaUsuario()
 		$stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
 		$stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
 		$stmt->bindParam("pais_usuario",$usuario->pais_usuario);
+		
 		$stmt->execute();
 		
 		ApiAppSessionCreate($usuario->facebook_usuario, $usuario->email_usuario, $usuario->nome_usuario);
@@ -1839,10 +1840,22 @@ function ApiUserSignUp($token, $facebook_usuario, $email, $nome){
 	
 	require 'config.php';
 	
+	//CONVERTE A STRING UNICODE PARA UTF-8 PARA TER A QUANTIDADE CORRETA DE CARACTERES DO NOME
+	$nomeFix = preg_replace_callback('/\\\\u([0-9a-fA-F]{4})/', function ($match) {
+		return mb_convert_encoding(pack('H*', $match[1]), 'UTF-8', 'UCS-2BE');
+	}, $nome);
+	//SE NOME DO USUÁRIO TEM MENOS QUE 3 CARACTERES, DEVEMOS CONCATENAR UM CARACTERE INVISÍVEL PARA CADASTRAR NO QUICKBLOX, SENÃO RETORNA ERRO {"errors":{"full_name":["is invalid","is too short (minimum is 3 characters)"]}}
+	if (strlen($nomeFix)<= 3) {
+		// 		$nome = $nome."%C2%A0";
+		$nomeFix = "{$nome} ";
+	}else{
+		$nomeFix = $nome;
+	}
+	
 	//transforma os dados que chegaram de par�metro nos dados que ser�o necess�rios para enviar a requisi��o
 	$login = $facebook_usuario;
 	$password = $facebook_usuario;
-	$full_name = $nome;
+	$full_name = $nomeFix;
 	$facebook_id = $facebook_usuario;
 	
 	// API endpoint
