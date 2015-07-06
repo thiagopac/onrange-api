@@ -421,6 +421,7 @@ function adicionaUsuario()
 	try{
 		$conn = getConn();
 		$stmt = $conn->prepare($sql);
+		$stmt->bindParam("nome_usuario",$usuario->nome_usuario);
 		$stmt->bindParam("sobrenome_usuario",$usuario->sobrenome_usuario);
 		$stmt->bindParam("sexo_usuario",$usuario->sexo_usuario);
 		$stmt->bindParam("facebook_usuario",$usuario->facebook_usuario);
@@ -429,16 +430,24 @@ function adicionaUsuario()
 		$stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
 		$stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
 		$stmt->bindParam("pais_usuario",$usuario->pais_usuario);
-		
-		//SE NOME DO USUÁRIO TEM MENOS QUE 3 CARACTERES, DEVEMOS CONCATENAR UM CARACTERE INVISÍVEL PARA CADASTRAR NO QUICKBLOX, SENÃO RETORNA ERRO {"errors":{"full_name":["is invalid","is too short (minimum is 3 characters)"]}}
-		
-		if (strlen($usuario->nome_usuario)<3) {
-			//$usuario->nome_usuario = $usuario->nome_usuario."%C2%A0";
-			$usuario->nome_usuario = $usuario->nome_usuario." ";
-		}
-		$stmt->bindParam("nome_usuario",$usuario->nome_usuario);
-		
 		$stmt->execute();
+		
+	        //CRIA LOG COM O OBJETO USUÁRIO QUE VEIO DO APARELHO
+//         if (strpos($usuario->nome_usuario,'NOME-DE-USUARIO-COM-ERRO') !== false) {
+        
+//         	$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/objetoUsuario-'.date('Y-m-d').".txt";
+//         	$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+        
+//         	$usuarioStr = serialize($usuario);
+        
+//         	fwrite($FILE_LOG, $usuarioStr);
+        
+//         	$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+        
+//         	fwrite($FILE_LOG, $LOG_TXT);
+        
+//         	fclose($FILE_LOG);
+//         }
 		
 		ApiAppSessionCreate($usuario->facebook_usuario, $usuario->email_usuario, $usuario->nome_usuario);
 	} catch(PDOException $e){
@@ -464,6 +473,7 @@ function adicionaUsuario()
 	$conn = null;
 }
 
+//MÉTODO CRIADO PARA TESTES, SEM INSERÇÃO NO BANCO
 function adicionaUsuario2()
 {
 	$request = \Slim\Slim::getInstance()->request();
@@ -485,7 +495,24 @@ function adicionaUsuario2()
 
 // 		$stmt->execute();
 
-		ApiAppSessionCreate($usuario->facebook_usuario, $usuario->email_usuario, $usuario->nome_usuario);
+	        //CRIA LOG COM O OBJETO USUÁRIO QUE VEIO DO APARELHO
+//         if (strpos($usuario->nome_usuario,'NOME-DE-USUARIO-COM-ERRO') !== false) {
+        
+//         	$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/objetoUsuario-'.date('Y-m-d').".txt";
+//         	$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+        
+//         	$usuarioStr = serialize($usuario);
+        
+//         	fwrite($FILE_LOG, $usuarioStr);
+        
+//         	$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+        
+//         	fwrite($FILE_LOG, $LOG_TXT);
+        
+//         	fclose($FILE_LOG);
+//         }
+
+		//ApiAppSessionCreate($usuario->facebook_usuario, $usuario->email_usuario, $usuario->nome_usuario);
 	} catch(PDOException $e){
 
 		//ERRO 509
@@ -1033,6 +1060,24 @@ function loginUsuario()
         $stmt->execute();
 
         $registro_usuario = $stmt->fetch(PDO::FETCH_OBJ);
+        
+        //CRIA LOG COM O OBJETO USUÁRIO QUE VEIO DO APARELHO
+//         if (strpos($usuario->nome_usuario,'NOME-DE-USUARIO-COM-ERRO') !== false) {
+        
+//         	$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/objetoUsuario-'.date('Y-m-d').".txt";
+//         	$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+        
+//         	$usuarioStr = serialize($usuario);
+        
+//         	fwrite($FILE_LOG, $usuarioStr);
+        
+//         	$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+        
+//         	fwrite($FILE_LOG, $LOG_TXT);
+        
+//         	fclose($FILE_LOG);
+//         }
+        
 
     } catch(PDOException $e){
 
