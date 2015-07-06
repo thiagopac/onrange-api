@@ -22,6 +22,11 @@ $app->get('/promo/adicionapromocheckin/:id_promo/:id_usuario','adicionaPromoChec
 //POST METHODS
 $app->post('/local/adicionalocal','adicionaLocal'); //cria novo local
 $app->post('/usuario/adicionausuario','adicionaUsuario'); //cria novo usuario
+
+//CRIADO PARA TESTES, APAGAR
+$app->post('/usuario/adicionausuario2','adicionaUsuario2'); //cria novo usuario
+//
+
 $app->post('/checkin/adicionacheckin','adicionaCheckin'); //faz checkin
 $app->post('/like/adicionalike','adicionaLike'); //da like em alguem, em algum local
 $app->post('/usuario/login','loginUsuario'); //faz login de usuario
@@ -416,7 +421,6 @@ function adicionaUsuario()
 	try{
 		$conn = getConn();
 		$stmt = $conn->prepare($sql);
-		$stmt->bindParam("nome_usuario",$usuario->nome_usuario);
 		$stmt->bindParam("sobrenome_usuario",$usuario->sobrenome_usuario);
 		$stmt->bindParam("sexo_usuario",$usuario->sexo_usuario);
 		$stmt->bindParam("facebook_usuario",$usuario->facebook_usuario);
@@ -425,6 +429,14 @@ function adicionaUsuario()
 		$stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
 		$stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
 		$stmt->bindParam("pais_usuario",$usuario->pais_usuario);
+		
+		//SE NOME DO USUÁRIO TEM MENOS QUE 3 CARACTERES, DEVEMOS CONCATENAR UM CARACTERE INVISÍVEL PARA CADASTRAR NO QUICKBLOX, SENÃO RETORNA ERRO {"errors":{"full_name":["is invalid","is too short (minimum is 3 characters)"]}}
+		
+		if (strlen($usuario->nome_usuario)<3) {
+			//$usuario->nome_usuario = $usuario->nome_usuario."%C2%A0";
+			$usuario->nome_usuario = $usuario->nome_usuario." ";
+		}
+		$stmt->bindParam("nome_usuario",$usuario->nome_usuario);
 		
 		$stmt->execute();
 		
@@ -449,6 +461,51 @@ function adicionaUsuario()
 				
 	echo json_encode($usuario);
 	
+	$conn = null;
+}
+
+function adicionaUsuario2()
+{
+	$request = \Slim\Slim::getInstance()->request();
+	$usuario = json_decode($request->getBody());
+
+ 	$sql = "INSERT INTO USUARIO (nome, sobrenome, sexo, id_facebook, id_qb, email, dt_usuario, aniversario, cidade, pais) VALUES (:nome_usuario, :sobrenome_usuario, :sexo_usuario, :facebook_usuario, :quickblox_usuario, :email_usuario, NOW(), :aniversario_usuario, :cidade_usuario, :pais_usuario)";
+	try{
+		$conn = getConn();
+ 		$stmt = $conn->prepare($sql);
+ 		$stmt->bindParam("nome_usuario",$usuario->nome_usuario);
+		$stmt->bindParam("sobrenome_usuario",$usuario->sobrenome_usuario);
+		$stmt->bindParam("sexo_usuario",$usuario->sexo_usuario);
+		$stmt->bindParam("facebook_usuario",$usuario->facebook_usuario);
+		$stmt->bindParam("quickblox_usuario",$usuario->quickblox_usuario);
+		$stmt->bindParam("email_usuario",$usuario->email_usuario);
+		$stmt->bindParam("aniversario_usuario",$usuario->aniversario_usuario);
+		$stmt->bindParam("cidade_usuario",$usuario->cidade_usuario);
+		$stmt->bindParam("pais_usuario",$usuario->pais_usuario);
+
+// 		$stmt->execute();
+
+		ApiAppSessionCreate($usuario->facebook_usuario, $usuario->email_usuario, $usuario->nome_usuario);
+	} catch(PDOException $e){
+
+		//ERRO 509
+		//MENSAGEM: Erro ao adicionar novo usuario
+
+		header('HTTP/1.1 509 Erro ao adicionar novo usuario');
+		echo '[]';
+
+		die();
+
+		//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+	}
+
+	$usuario->id_usuario = $conn->lastInsertId();
+
+	$usuario->id_output = "1";
+	$usuario->desc_output = "Usuario criado com sucesso.";
+
+	echo json_encode($usuario);
+
 	$conn = null;
 }
 
@@ -1840,7 +1897,7 @@ function ApiUserSignUp($token, $facebook_usuario, $email, $nome){
 	
 	require 'config.php';
 	
-	//CONVERTE A STRING UNICODE PARA UTF-8 PARA TER A QUANTIDADE CORRETA DE CARACTERES DO NOME
+	//CONVERTE A STRING UNICODE PARA UTF-8
 	$nomeFix = preg_replace_callback('/\\\\u([0-9a-fA-F]{4})/', function ($match) {
 		return mb_convert_encoding(pack('H*', $match[1]), 'UTF-8', 'UCS-2BE');
 	}, $nome);
@@ -1909,20 +1966,34 @@ function ApiUserSignUp($token, $facebook_usuario, $email, $nome){
 	
 	// Checando resposta e escrevendo em log
 	if ($response) {
-	$respostaLog = "\r\n\r\nResposta: {$response}\r\n\r\n";
+		$respostaLog = "\r\n\r\nResposta: {$response}\r\n\r\n";
+		
+		//TRANSFORMA A RESPOSTA DO QB QUE É JSON EM UM ARRAY
+		$array_resposta_qb = json_decode($response,true);
+		
+		//SE USER NÃO FOR NULO, FOI CRIADO USUÁRIO COM SUCESSO, ENTÃO PEGAMOS O ID E FAZEMOS O UPDATE
+		if (isset($array_resposta_qb['user'])) {
+	
+			$id_qb_criado = $array_resposta_qb['user']['id'];
+		
+		}//SE ERRORS NÃO FOR NULO, RETORNOU UM ERRO E NÃO DEVE SER FEITO O UPDATE
+		else if (isset($array_resposta_qb['errors'])) {
+			//SE CAIU AQUI DEU ERRO MAS NÃO É PRA FAZER NADA, POIS O ERRO JÁ ESTÁ SENDO GRAVADO
+		}
+	
 	}else{
 		$error = curl_error($curl). '(' .curl_errno($curl). ')';
 				$respostaLog = "\r\n\r\nErro: {$error}\r\n\r\n";
 	}
 	
 	if($log == 1){
-	fwrite($FILE_LOG, $respostaLog);
-	
-	$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+		fwrite($FILE_LOG, $respostaLog);
 		
+		$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+			
 		fwrite($FILE_LOG, $LOG_TXT);
-	
-			fclose($FILE_LOG);
+		
+		fclose($FILE_LOG);
 	}
 	
 	// Fechando conex�o
