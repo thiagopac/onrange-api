@@ -512,7 +512,7 @@ function adicionaUsuario2()
 //         	fclose($FILE_LOG);
 //         }
 
-		//ApiAppSessionCreate($usuario->facebook_usuario, $usuario->email_usuario, $usuario->nome_usuario);
+		ApiAppSessionCreate($usuario->facebook_usuario, $usuario->email_usuario, $usuario->nome_usuario);
 	} catch(PDOException $e){
 
 		//ERRO 509
@@ -1949,7 +1949,7 @@ function ApiUserSignUp($token, $facebook_usuario, $email, $nome){
 	//SE NOME DO USUÁRIO TEM MENOS QUE 3 CARACTERES, DEVEMOS CONCATENAR UM CARACTERE INVISÍVEL PARA CADASTRAR NO QUICKBLOX, SENÃO RETORNA ERRO {"errors":{"full_name":["is invalid","is too short (minimum is 3 characters)"]}}
 	if (strlen($nomeFix)<= 3) {
 		// 		$nome = $nome."%C2%A0";
-		$nomeFix = "{$nome} ";
+		$nomeFix = "{$nome}  ";
 	}else{
 		$nomeFix = $nome;
 	}
@@ -2020,6 +2020,27 @@ function ApiUserSignUp($token, $facebook_usuario, $email, $nome){
 		if (isset($array_resposta_qb['user'])) {
 	
 			$id_qb_criado = $array_resposta_qb['user']['id'];
+			
+			$sql = "UPDATE USUARIO SET id_qb = " . $id_qb_criado . " WHERE id_facebook = " . $facebook_usuario;
+			try{
+				$conn = getConn();
+				$stmt = $conn->prepare($sql);
+				$stmt->execute();
+			} catch(PDOException $e){
+			
+				//ERRO 511
+				//MENSAGEM: Erro ao autalizar usuario
+			
+				header('HTTP/1.1 511 Erro ao autalizar usuario');
+				
+				// echo '[]';
+			
+				// die();
+			
+				//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+			
+			}
+			
 		
 		}//SE ERRORS NÃO FOR NULO, RETORNOU UM ERRO E NÃO DEVE SER FEITO O UPDATE
 		else if (isset($array_resposta_qb['errors'])) {
@@ -2043,6 +2064,8 @@ function ApiUserSignUp($token, $facebook_usuario, $email, $nome){
 	
 	// Fechando conex�o
 	curl_close($curl);
+	
+	$conn = null;
 	
 	//redirecionando o fluxo para a fun��o de destrui��o da sess�o do aplicativo, sem necessitar da destrui��o da sess�o de usu�rio
 	ApiSessionDestroy($token);
