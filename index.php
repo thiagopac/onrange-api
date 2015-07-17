@@ -52,6 +52,25 @@ function getConn()
 	array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8", PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
 }
 
+function log($metodo,$conteudo)
+{
+	require 'config.php';
+	
+	if($log == 1){//vari�vel definida no config.php
+		//criando ou abrindo o log de cURL para escrita
+		$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/'.$metodo.'-'.date('Y-m-d').".txt";
+		$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
+	
+		fwrite($FILE_LOG, $conteudo);
+	
+		$LOG_TXT = "\r\n-----------------------------------------------------------------------------------------\r\n\r\n";
+			
+		fwrite($FILE_LOG, $LOG_TXT);
+	
+		fclose($FILE_LOG);
+	}
+}
+
 function listaTodosLocais()
 {
 	$sql = "SELECT id_local, nome, latitude, longitude FROM LOCAL";
