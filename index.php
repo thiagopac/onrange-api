@@ -57,7 +57,6 @@ function criaLog($metodo,$conteudo)
 	require 'config.php';
 	
 	if($log == 1){//vari�vel definida no config.php
-		//criando ou abrindo o log de cURL para escrita
 		$FILE_LOG_DIR = dirname($_SERVER['SCRIPT_FILENAME']).'/log/'.$metodo.'-'.date('Y-m-d').".txt";
 		$FILE_LOG = fopen($FILE_LOG_DIR, "a+");
 	
@@ -180,6 +179,8 @@ function listaLocaisRange($latitude_atual,$longitude_atual,$range,$order_by)
             //ERRO 502
             //MENSAGEM: Erro na listagem de locais
             
+			criaLog("listaLocaisRange",$e->getMessage());
+		
             header('HTTP/1.1 502 Erro na listagem de locais');
             echo '[]';
                                 
@@ -208,6 +209,8 @@ function adicionaLocal()
         //ERRO 557
         //MENSAGEM: Erro ao buscar ultimo local criado pelo usuario
 
+    	criaLog("adicionaLocal",$e->getMessage());
+    	
         header('HTTP/1.1 557 Erro ao buscar ultimo local criado pelo usuario');
         echo '[]';
 
@@ -244,6 +247,8 @@ function adicionaLocal()
 
             //ERRO 503
             //MENSAGEM: Erro ao adicionar novo local
+            
+        	criaLog("adicionaLocal",$e->getMessage());
 
             header('HTTP/1.1 503 Erro ao adicionar novo local');
             echo '[]';
@@ -266,6 +271,8 @@ function adicionaLocal()
 
             //ERRO 504
             //MENSAGEM: Erro ao adicionar novo local em checkins correntes
+            
+        	criaLog("adicionaLocal",$e->getMessage());
 
             header('HTTP/1.1 504 Erro ao adicionar novo local em checkins correntes');
             echo '[]';
@@ -292,6 +299,8 @@ function adicionaLocal()
 
             //ERRO 505
             //MENSAGEM: Erro ao verificar checkin corrente do usuario
+            
+        	criaLog("adicionaLocal",$e->getMessage());
 
             header('HTTP/1.1 505 Erro ao verificar checkin corrente do usuario');
             echo '[]';
@@ -316,6 +325,8 @@ function adicionaLocal()
             } catch(PDOException $e){
                     //ERRO 519
                     //MENSAGEM: Erro ao realizar checkout no local anterior
+                    
+            		criaLog("adicionaLocal",$e->getMessage());
 
                     header('HTTP/1.1 519 Erro ao realizar checkout no local anterior');
                     echo '[]';
@@ -339,6 +350,8 @@ function adicionaLocal()
 
                     //ERRO 506
                     //MENSAGEM: Erro ao decrementar tabela de checkins correntes
+                    
+            		criaLog("adicionaLocal",$e->getMessage());
 
                     header('HTTP/1.1 506 Erro ao decrementar tabela de checkins correntes');
                     echo '[]';
@@ -362,6 +375,8 @@ function adicionaLocal()
 
                 //ERRO 535
                 //MENSAGEM: Erro ao expirar os likes do usuario
+                
+            	criaLog("adicionaLocal",$e->getMessage());
 
                 header('HTTP/1.1 535 Erro ao expirar os likes do usuario');	
                 echo '[]';
@@ -384,6 +399,8 @@ function adicionaLocal()
 
             //ERRO 507
             //MENSAGEM: Erro ao fazer checkin no local criado
+            
+        	criaLog("adicionaLocal",$e->getMessage());
 
             header('HTTP/1.1 507 Erro ao fazer checkin no local criado');
             echo '[]';
@@ -404,6 +421,8 @@ function adicionaLocal()
 
             //ERRO 520
             //MENSAGEM: Erro ao incrementar tabela de checkins correntes
+            
+        	criaLog("adicionaLocal",$e->getMessage());
 
             header('HTTP/1.1 520 Erro ao incrementar tabela de checkins correntes');
             echo '[]';
@@ -473,6 +492,8 @@ function adicionaUsuario()
 		
 		//ERRO 509
 		//MENSAGEM: Erro ao adicionar novo usuario
+		
+		criaLog("adicionaUsuario",$e->getMessage());
 
 		header('HTTP/1.1 509 Erro ao adicionar novo usuario');
 		echo '[]';
@@ -536,6 +557,8 @@ function adicionaUsuario2()
 
 		//ERRO 509
 		//MENSAGEM: Erro ao adicionar novo usuario
+		
+		criaLog("adicionaUsuario2",$e->getMessage());
 
 		header('HTTP/1.1 509 Erro ao adicionar novo usuario');
 		echo '[]';
@@ -571,6 +594,8 @@ function adicionaCheckin()
 		
             //ERRO 513
             //MENSAGEM: Erro ao buscar checkins
+            
+			criaLog("adicionaCheckin",$e->getMessage());
 
             header('HTTP/1.1 513 Erro ao buscar checkins');
             echo '[]';
@@ -606,6 +631,8 @@ function adicionaCheckin()
 			} catch(PDOException $e){
               //ERRO 514
               //MENSAGEM: Erro ao fazer checkout pre-checkin
+              
+			  criaLog("adicionaCheckin",$e->getMessage());
 
               header('HTTP/1.1 514 Erro ao fazer checkout pre-checkin');
               echo '[]';
@@ -625,6 +652,8 @@ function adicionaCheckin()
 			} catch(PDOException $e){
               //ERRO 515
               //MENSAGEM: Erro ao decrementar tabela de checkins correntes
+              
+			  criaLog("adicionaCheckin",$e->getMessage());
 
               header('HTTP/1.1 515 Erro ao decrementar tabela de checkins correntes');
               echo '[]';
@@ -648,6 +677,8 @@ function adicionaCheckin()
 
                 //ERRO 535
                 //MENSAGEM: Erro ao expirar os likes do usuario
+                
+                criaLog("adicionaCheckin",$e->getMessage());
 
                 header('HTTP/1.1 535 Erro ao expirar os likes do usuario');	
                 echo '[]';
@@ -689,6 +720,8 @@ function adicionaCheckin()
 	
             //ERRO 517
             //MENSAGEM: Erro ao fazer checkin
+            
+			criaLog("adicionaCheckin",$e->getMessage());
 
             header('HTTP/1.1 517 Erro ao fazer checkin');
             echo '[]';
@@ -708,6 +741,8 @@ function adicionaCheckin()
 	} catch(PDOException $e){
             //ERRO 518
             //MENSAGEM: Erro ao incrementar tabela de checkins correntes
+            
+			criaLog("adicionaCheckin",$e->getMessage());
 
             header('HTTP/1.1 518 Erro ao incrementar tabela de checkins correntes');
             echo '[]';
@@ -741,6 +776,8 @@ function adicionaCheckin()
     
         //ERRO 537
         //MENSAGEM: Erro ao buscar local
+        
+    	criaLog("adicionaCheckin",$e->getMessage());
 
         header('HTTP/1.1 537 Erro ao buscar local');	
         echo '[]';
@@ -780,6 +817,8 @@ function adicionaLike()
     
     	//ERRO 525
         //MENSAGEM: Erro ao verificar se houve match
+        
+    	criaLog("adicionaLike",$e->getMessage());
 
         header('HTTP/1.1 525 Erro ao verificar se houve match');
         echo '[]';
@@ -805,6 +844,8 @@ function adicionaLike()
 	
 	        //ERRO 521
 	        //MENSAGEM: Erro ao buscar checkin do usuario de destino
+	        
+	    	criaLog("adicionaLike",$e->getMessage());
 	
 	        header('HTTP/1.1 521 Erro ao buscar checkin do usuario de destino');
 	        echo '[]';
@@ -846,6 +887,8 @@ function adicionaLike()
 	
 	            //ERRO 523
 	            //MENSAGEM: Erro ao verificar se ja existe like
+	            
+	        	criaLog("adicionaLike",$e->getMessage());
 	
 	            header('HTTP/1.1 523 Erro ao verificar se ja existe like');
 	            echo '[]';
@@ -874,6 +917,8 @@ function adicionaLike()
 	
 	                //ERRO 524
 	                //MENSAGEM: Erro ao curtir
+	                
+	            	criaLog("adicionaLike",$e->getMessage());
 	
 	                header('HTTP/1.1 524 Erro ao curtir');
 	                echo '[]';
@@ -898,6 +943,8 @@ function adicionaLike()
 	
 	                //ERRO 525
 	                //MENSAGEM: Erro ao verificar se houve match
+	                
+	            	criaLog("adicionaLike",$e->getMessage());
 	
 	                header('HTTP/1.1 525 Erro ao verificar se houve match');
 	                echo '[]';
@@ -928,6 +975,8 @@ function adicionaLike()
 	
 	                        //ERRO 526
 	                        //MENSAGEM: Erro ao buscar facebook_usuario do usuario 1
+	                        
+	                    	criaLog("adicionaLike",$e->getMessage());
 	
 	                        header('HTTP/1.1 526 Erro ao buscar facebook_usuario do usuario 1');
 	                        echo '[]';
@@ -948,6 +997,8 @@ function adicionaLike()
 	
 	                        //ERRO 527
 	                        //MENSAGEM: Erro ao buscar facebook_usuario do usuario 2
+	                        
+	                    	criaLog("adicionaLike",$e->getMessage());
 	
 	                        header('HTTP/1.1 527 Erro ao buscar facebook_usuario do usuario 2');
 	                        echo '[]';
@@ -966,6 +1017,8 @@ function adicionaLike()
 	
 	                        //ERRO 543
 	                        //MENSAGEM: Erro ao criar chat no QB
+	                        
+	                    	criaLog("adicionaLike",$e->getMessage());
 	
 	                        header('HTTP/1.1 543 Erro ao criar chat no QB');	
 	                        echo '[]';
@@ -988,6 +1041,8 @@ function adicionaLike()
 	
 	                        //ERRO 528
 	                        //MENSAGEM: Erro ao criar match
+	                        
+	                    	criaLog("adicionaLike",$e->getMessage());
 	
 	                        header('HTTP/1.1 528 Erro ao criar match');
 	                        echo '[]';
@@ -1012,6 +1067,8 @@ function adicionaLike()
 	
 	                        //ERRO 527
 	                        //MENSAGEM: Erro ao buscar ID do QB do usuario 2
+	                        
+	                    	criaLog("adicionaLike",$e->getMessage());
 	
 	                        header('HTTP/1.1 527 Erro ao buscar ID do QB do usuario 2');
 	                        echo '[]';
@@ -1042,6 +1099,8 @@ function adicionaLike()
 	
 	                //ERRO 529
 	                //MENSAGEM: Erro ao descurtir
+	                
+	            	criaLog("adicionaLike",$e->getMessage());
 	
 	                header('HTTP/1.1 529 Erro ao descurtir');
 	                echo '[]';
@@ -1102,6 +1161,8 @@ function loginUsuario()
 
         //ERRO 530
         //MENSAGEM: Erro ao buscar usuario
+        
+    	criaLog("loginUsuario",$e->getMessage());
 
         header('HTTP/1.1 530 Erro ao buscar usuario');	
         echo '[]';
@@ -1140,6 +1201,8 @@ function loginUsuario()
 
                     //ERRO 546
                     //MENSAGEM: Erro ao remover data de exclusao do usuario
+                    
+                	criaLog("loginUsuario",$e->getMessage());
 
                     header('HTTP/1.1 546 Erro ao remover data de exclusao do usuario');	
                     echo '[]';
@@ -1209,6 +1272,8 @@ function loginUsuario()
 
                         //ERRO 511
                         //MENSAGEM: Erro ao autalizar usuario
+                        
+                	criaLog("loginUsuario",$e->getMessage());
 
                         header('HTTP/1.1 511 Erro ao autalizar usuario');
                         echo '[]';
@@ -1311,6 +1376,8 @@ function listaUsuariosCheckin($id_local,$sexo,$id_usuario)
         
         //ERRO 531
         //MENSAGEM: Erro na listagem de usuarios
+        
+    	criaLog("listaUsuariosCheckin",$e->getMessage());
 
         header('HTTP/1.1 531 Erro na listagem de usuarios');	
         echo '[]';
@@ -1342,6 +1409,8 @@ function listaUsuariosCheckinWidget($id_local)
 
 		//ERRO 531
 		//MENSAGEM: Erro na listagem de usuarios
+		
+		criaLog("listaUsuariosCheckinWidget",$e->getMessage());
 
 		header('HTTP/1.1 531 Erro na listagem de usuarios');
 		echo '[]';
@@ -1367,6 +1436,8 @@ function fazCheckout()
 
         //ERRO 532
         //MENSAGEM: Erro ao buscar checkin
+        
+    	criaLog("fazCheckout",$e->getMessage());
 
         header('HTTP/1.1 532 Erro ao buscar checkin');	
         echo '[]';
@@ -1392,7 +1463,7 @@ function fazCheckout()
             //ERRO 533
             //MENSAGEM: Erro ao fazer checkout
             
-        	//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+        	criaLog("fazCheckout",$e->getMessage());
 
             header('HTTP/1.1 533 Erro ao fazer checkout');	
             echo '[]';
@@ -1414,6 +1485,8 @@ function fazCheckout()
 
             //ERRO 534
             //MENSAGEM: Erro ao decrementar tabela de checkins correntes
+            
+        	criaLog("fazCheckout",$e->getMessage());
 
             header('HTTP/1.1 534 Erro ao fazer checkout');	
             echo '[]';
@@ -1435,6 +1508,8 @@ function fazCheckout()
 
             //ERRO 535
             //MENSAGEM: Erro ao expirar os likes do usuario
+            
+        	criaLog("fazCheckout",$e->getMessage());
 
             header('HTTP/1.1 535 Erro ao expirar os likes do usuario');	
             echo '[]';
@@ -1475,6 +1550,8 @@ function verificaCheckinUsuario($id_usuario)
     } catch(PDOException $e){
         //ERRO 537
         //MENSAGEM: Erro ao buscar local
+        
+    	criaLog("verificaCheckinUsuario",$e->getMessage());
 
         header('HTTP/1.1 537 Erro ao buscar local');	
         echo '[]';
@@ -1500,6 +1577,8 @@ function verificaCheckinUsuario($id_usuario)
         } catch(PDOException $e){
             //ERRO 538
             //MENSAGEM: Erro ao buscar quantidade de checkins
+            
+        	criaLog("verificaCheckinUsuario",$e->getMessage());
 
             header('HTTP/1.1 538 Erro ao buscar quantidade de checkins');	
             echo '[]';
@@ -1541,6 +1620,8 @@ function listaMatches($id_usuario)
 
         //ERRO 539
         //MENSAGEM: Erro ao buscar matches
+        
+    	criaLog("listaMatches",$e->getMessage());
 
         header('HTTP/1.1 539 Erro ao buscar matches');	
         echo '[]';
@@ -1573,6 +1654,8 @@ function listaChats($id_usuario)
 
 		//ERRO 539
 		//MENSAGEM: Erro ao buscar matches
+		
+		criaLog("listaChats",$e->getMessage());
 
 		header('HTTP/1.1 539 Erro ao buscar chats');
 		echo '[]';
@@ -1604,6 +1687,8 @@ function unMatch()
 
         //ERRO 544
         //MENSAGEM: Erro ao apagar chat no QB
+        
+    	criaLog("unMatch",$e->getMessage());
 
         header('HTTP/1.1 544 Erro ao apagar chat no QB');	
         echo '[]';
@@ -1728,6 +1813,8 @@ function listaTodosUsuariosQuickblox()
 		
             //ERRO 541
             //MENSAGEM: Erro ao enviar requisicao para o QB
+            
+			criaLog("listaTodosUsuariosQuickblox",$e->getMessage());
 
             header('HTTP/1.1 541 Erro ao enviar requisicao para o QB');	
             echo '[]';
@@ -2708,6 +2795,8 @@ function apagaUsuario()
 
         //ERRO 542
         //MENSAGEM: Erro ao apagar usuario
+        
+    	criaLog("apagaUsuario",$e->getMessage());
 
         header('HTTP/1.1 542 Erro ao apagar usuario');	
         echo '[]';
@@ -2754,6 +2843,8 @@ function listaPromosUsuario($id_usuario)
 
         //ERRO 547
         //MENSAGEM: Erro ao buscar promos
+        
+    	criaLog("listaPromosUsuario",$e->getMessage());
 
         header('HTTP/1.1 547 Erro ao buscar promos');	
         echo '[]';
@@ -2784,6 +2875,8 @@ function marcaPromoVisualizado()
 
         //ERRO 548
         //MENSAGEM: Erro ao marcar promo visualizado
+        
+    	criaLog("marcaPromoVisualizado",$e->getMessage());
 
         header('HTTP/1.1 548 Erro ao marcar promo visualizado');	
         echo '[]';
@@ -2829,6 +2922,8 @@ function apagaPromoUsuario()
 
         //ERRO 549
         //MENSAGEM: Erro ao apagar promo
+        
+    	criaLog("apagaPromoUsuario",$e->getMessage());
 
         header('HTTP/1.1 549 Erro ao apagar promo');	
         echo '[]';
@@ -2888,6 +2983,8 @@ function adicionaPromoCheckin($id_promo,$id_usuario)
 
         //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
         
+    	criaLog("adicionaPromoCheckin",$e->getMessage());
+        
      	$retorno = false;
 
     }	
@@ -2917,6 +3014,8 @@ function adicionaPromoCheckin($id_promo,$id_usuario)
             //die();
 
             //echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+            
+        	criaLog("adicionaPromoCheckin",$e->getMessage());
             
         	$retorno = false;
         }
@@ -2948,6 +3047,8 @@ function adicionaPromoCheckin($id_promo,$id_usuario)
         	} catch(PDOException $e){
         		 
         		//echo '{"Erro":{"descricao":"'. $e->getMessage() .'"}}';
+        		
+        		criaLog("adicionaPromoCheckin",$e->getMessage());
         		 
         		$retorno = false;
         	}
@@ -2996,6 +3097,8 @@ function verificaPromoLocal($id_local)
     } catch(PDOException $e){
         //ERRO 554
         //MENSAGEM: Erro ao verificar promo
+        
+    	criaLog("verificaPromoLocal",$e->getMessage());
 
         header('HTTP/1.1 554 Erro ao verificar promo');	
         echo '[]';
@@ -3030,6 +3133,8 @@ function verificaPromosNaoLidos($id_usuario)
     } catch(PDOException $e){
         //ERRO 555
         //MENSAGEM: Erro ao verificar promos
+        
+    	criaLog("verificaPromosNaoLidos",$e->getMessage());
 
         header('HTTP/1.1 555 Erro ao verificar promos');	
         echo '[]';
@@ -3061,6 +3166,8 @@ function verificaConfiguracoes()
     } catch(PDOException $e){
         //ERRO 556
         //MENSAGEM: Erro ao verificar configuracoes
+        
+    	criaLog("verificaConfiguracoes",$e->getMessage());
 
         header('HTTP/1.1 556 Erro ao verificar configuracoes');	
         echo '[]';
@@ -3092,6 +3199,8 @@ function adicionaErroQB()
 
         //ERRO 559
         //MENSAGEM: Erro ao adicionar erro do QB
+        
+    	criaLog("adicionaErroQB",$e->getMessage());
 
         header('HTTP/1.1 559 Erro ao adicionar erro do QB');
         echo '[]';
@@ -3136,6 +3245,8 @@ function enviaPush()
 
 		//ERRO 559
 		//MENSAGEM: Erro ao adicionar erro do QB
+		
+		criaLog("enviaPush",$e->getMessage());
 
 		header('HTTP/1.1 559 Erro ao adicionar erro do QB');
 		echo '[]';
